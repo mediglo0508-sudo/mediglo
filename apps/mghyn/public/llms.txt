@@ -1,0 +1,9 @@
+# MGHYN Clinic ERP
+
+> Clinic management and billing platform for aesthetic and wellness clinics in India — GST-compliant invoicing, package session wallets, appointment scheduling, inventory and CRM.
+
+The public site hosts resources about clinic billing and practice management. The application itself (dashboard, POS, appointments, inventory, CRM) is private and requires staff sign-in.
+
+## Pages
+
+- [Selecting Medical Billing Software for Aesthetic Clinics](/resources/medical-billing-guide): A practical guide to GST/SAC compliance, package session tracking, split payments, and safe invoice edits when choosing medical billing software.

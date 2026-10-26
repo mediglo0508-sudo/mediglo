@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.next_invoice_no() FROM PUBLIC, anon, authenticated;

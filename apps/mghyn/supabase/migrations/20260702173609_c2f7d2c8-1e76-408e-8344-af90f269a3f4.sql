@@ -1,0 +1,1 @@
+ALTER TABLE public.patient_visits ADD COLUMN IF NOT EXISTS counselor_slot text;

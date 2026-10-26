@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION app_private.import_inventory_rows(jsonb, uuid) TO authenticated;

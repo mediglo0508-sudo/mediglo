@@ -1,16 +1,17 @@
 {
   "name": "mediglo-platform",
   "private": true,
-  "version": "0.1.0",
-  "description": "MediGlo Harmony (ERP) and MediGlo Tracker - self-hosted, Supabase-backed clinic software, built as a connected two-app platform.",
+  "version": "1.0.0",
+  "description": "MGHYN Clinic ERP (MediGlo Harmony) - 28-module full-stack TanStack Start + React 19 + Supabase clinic operations & accounting platform.",
   "workspaces": [
-    "apps/*",
+    "apps/erp",
     "packages/*"
   ],
   "scripts": {
+    "dev": "cd apps/mghyn && npm run dev -- --port 3000 --host 0.0.0.0",
+    "dev:mghyn": "cd apps/mghyn && npm run dev -- --port 3000 --host 0.0.0.0",
+    "build:mghyn": "cd apps/mghyn && npm run build",
     "dev:erp": "npm run dev --workspace=@mediglo/erp",
-    "build:erp": "npm run build --workspace=@mediglo/erp",
-    "dev:tracker": "npm run dev --workspace=@mediglo/tracker",
-    "build:tracker": "npm run build --workspace=@mediglo/tracker"
+    "build:erp": "npm run build --workspace=@mediglo/erp"
   }
 }
