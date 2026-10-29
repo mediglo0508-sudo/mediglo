@@ -1,0 +1,306 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system definition.
+ *
+ * The @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary).
+ *
+ * The :root and .dark blocks define the actual color values using oklch.
+ * All colors MUST use oklch format.
+ *
+ * To add a new semantic color:
+ * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Appointment status palette — soft pastel premium */
+  --color-cal-scheduled: var(--cal-scheduled);
+  --color-cal-scheduled-text: var(--cal-scheduled-text);
+  --color-cal-checkedin: var(--cal-checkedin);
+  --color-cal-checkedin-text: var(--cal-checkedin-text);
+  --color-cal-rescheduled: var(--cal-rescheduled);
+  --color-cal-rescheduled-text: var(--cal-rescheduled-text);
+  --color-cal-cancelled: var(--cal-cancelled);
+  --color-cal-cancelled-text: var(--cal-cancelled-text);
+  --color-cal-returning: var(--cal-returning);
+  --color-cal-returning-text: var(--cal-returning-text);
+  --color-cal-due: var(--cal-due);
+  --color-cal-due-text: var(--cal-due-text);
+
+  --color-logo-bg: var(--logo-bg);
+}
+
+:root {
+  --radius: 0.75rem;
+  /* VVIP premium clinic palette — deep maroon / espresso + soft blush rose gold */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.22 0.03 25);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.03 25);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.03 25);
+  --primary: oklch(0.33 0.10 20);
+  --primary-foreground: oklch(0.98 0.01 30);
+  --secondary: oklch(0.96 0.02 25);
+  --secondary-foreground: oklch(0.33 0.10 20);
+  --muted: oklch(0.975 0.008 30);
+  --muted-foreground: oklch(0.52 0.03 25);
+  --accent: oklch(0.94 0.035 20);
+  --accent-foreground: oklch(0.33 0.10 20);
+  --destructive: oklch(0.55 0.20 27);
+  --destructive-foreground: oklch(0.99 0.01 0);
+  --border: oklch(0.92 0.012 30);
+  --input: oklch(0.92 0.012 30);
+  --ring: oklch(0.45 0.10 20);
+  --chart-1: oklch(0.38 0.11 20);
+  --chart-2: oklch(0.62 0.10 30);
+  --chart-3: oklch(0.74 0.09 40);
+  --chart-4: oklch(0.50 0.09 350);
+  --chart-5: oklch(0.82 0.07 30);
+  --sidebar: oklch(0.26 0.07 22);
+  --sidebar-foreground: oklch(0.94 0.015 30);
+  --sidebar-primary: oklch(0.80 0.08 35);
+  --sidebar-primary-foreground: oklch(0.24 0.07 22);
+  --sidebar-accent: oklch(0.33 0.08 22);
+  --sidebar-accent-foreground: oklch(0.97 0.01 30);
+  --sidebar-border: oklch(0.36 0.06 22);
+  --sidebar-ring: oklch(0.80 0.08 35);
+  --gradient-brand: linear-gradient(135deg, oklch(0.33 0.10 20), oklch(0.46 0.09 25));
+  --shadow-elegant: 0 12px 34px -18px oklch(0.30 0.08 20 / 0.35);
+}
+
+
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    letter-spacing: -0.005em;
+  }
+
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+  }
+
+  /* Premium breathing room inside data tables */
+  table th {
+    padding-block: 0.75rem;
+  }
+  table td {
+    padding-block: 0.65rem;
+  }
+}
+
+
+/* ============================================================
+ * COS Operations Cockpit — status color system
+ * Explicit, role-synchronized colors for calendar tiles, stock
+ * badges and workflow nodes. Defined as tokens so utilities like
+ * bg-cos-doctor / text-cos-open / border-cos-due resolve cleanly.
+ * ============================================================ */
+@theme {
+  --color-cos-open: oklch(0.72 0.17 150);        /* Green — fully open slot */
+  --color-cos-open-soft: oklch(0.95 0.05 150);
+  --color-cos-doctor: oklch(0.48 0.15 255);      /* Deep Blue — consultation block */
+  --color-cos-doctor-soft: oklch(0.93 0.05 255);
+  --color-cos-room: oklch(0.78 0.15 75);         /* Amber — treatment room block */
+  --color-cos-room-soft: oklch(0.95 0.06 75);
+  --color-cos-due: oklch(0.58 0.23 25);          /* Red — pending payment balance */
+  --color-cos-missed: oklch(0.55 0.20 300);      /* Purple — missed follow-up */
+  --color-cos-warn: oklch(0.82 0.16 95);         /* Yellow — low stock */
+}
+
+@keyframes cos-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@utility cos-flash {
+  animation: cos-flash 1.1s ease-in-out infinite;
+}
+
+
+/* ============================================================
+ * VIP MEDICAL-TECH THEME LAYER (visual only — no layout change)
+ * Blush + pearl gradients, honeycomb texture, glass cards,
+ * burgundy accents and premium chart colors.
+ * ============================================================ */
+:root {
+  --primary: oklch(0.34 0.12 18);
+  --ring: oklch(0.42 0.13 18);
+  --accent: oklch(0.95 0.032 15);
+  --glass-bg: oklch(1 0 0 / 0.62);
+  --glass-border: oklch(0.55 0.09 18 / 0.16);
+  --glow-primary: 0 0 0 1px oklch(0.42 0.13 18 / 0.18), 0 10px 30px -14px oklch(0.34 0.12 18 / 0.45);
+  --gradient-brand: linear-gradient(135deg, oklch(0.32 0.12 16), oklch(0.48 0.11 22));
+  --gradient-pearl: linear-gradient(160deg, oklch(0.995 0.006 20) 0%, oklch(0.975 0.022 12) 45%, oklch(0.985 0.012 30) 100%);
+  --honeycomb: oklch(0.45 0.10 18 / 0.05);
+  --chart-1: oklch(0.38 0.13 18);
+  --chart-2: oklch(0.62 0.13 340);
+  --chart-3: oklch(0.68 0.12 45);
+  --chart-4: oklch(0.55 0.12 255);
+  --chart-5: oklch(0.70 0.13 165);
+
+  /* Logo container — dark neutral so the neon-blue mark pops */
+  --logo-bg: oklch(0.12 0.03 260);
+
+  /* Appointment status palette — soft pastel premium */
+  --cal-scheduled: oklch(0.90 0.05 150);
+  --cal-scheduled-text: oklch(0.28 0.07 150);
+  --cal-checkedin: oklch(0.88 0.06 250);
+  --cal-checkedin-text: oklch(0.24 0.09 250);
+  --cal-rescheduled: oklch(0.93 0.07 90);
+  --cal-rescheduled-text: oklch(0.30 0.08 85);
+  --cal-cancelled: oklch(0.90 0.05 25);
+  --cal-cancelled-text: oklch(0.30 0.08 25);
+  --cal-returning: oklch(0.90 0.06 300);
+  --cal-returning-text: oklch(0.30 0.09 300);
+  --cal-due: oklch(0.78 0.07 260);
+  --cal-due-text: oklch(0.98 0.01 260);
+}
+
+@layer base {
+  body {
+    background-image:
+      radial-gradient(circle at 12% 0%, oklch(0.96 0.035 12 / 0.75), transparent 45%),
+      radial-gradient(circle at 92% 8%, oklch(0.97 0.025 330 / 0.6), transparent 42%),
+      var(--gradient-pearl);
+    background-attachment: fixed;
+  }
+
+  /* Subtle honeycomb weave behind all content */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.5;
+    background-image:
+      linear-gradient(30deg, var(--honeycomb) 12%, transparent 12.5%, transparent 87%, var(--honeycomb) 87.5%, var(--honeycomb)),
+      linear-gradient(150deg, var(--honeycomb) 12%, transparent 12.5%, transparent 87%, var(--honeycomb) 87.5%, var(--honeycomb)),
+      linear-gradient(30deg, var(--honeycomb) 12%, transparent 12.5%, transparent 87%, var(--honeycomb) 87.5%, var(--honeycomb)),
+      linear-gradient(150deg, var(--honeycomb) 12%, transparent 12.5%, transparent 87%, var(--honeycomb) 87.5%, var(--honeycomb));
+    background-size: 56px 98px;
+    background-position: 0 0, 0 0, 28px 49px, 28px 49px;
+  }
+
+}
+
+/* Glassmorphism for cards / popovers without touching spacing */
+[data-slot="card"],
+.glass-panel {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.6) inset, 0 12px 34px -22px oklch(0.30 0.09 18 / 0.4);
+  transition: box-shadow 220ms ease, border-color 220ms ease;
+}
+
+[data-slot="card"]:hover,
+.glass-panel:hover {
+  border-color: oklch(0.45 0.12 18 / 0.30);
+  box-shadow: var(--glow-primary);
+}
+
+[data-slot="popover-content"],
+[data-slot="dialog-content"],
+[data-slot="dropdown-menu-content"] {
+  backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--glass-border);
+}
+
+/* Futuristic focus glow */
+:where(input, textarea, select, button):focus-visible {
+  box-shadow: 0 0 0 3px oklch(0.45 0.12 18 / 0.16);
+}

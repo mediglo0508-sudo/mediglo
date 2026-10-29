@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
@@ -34,6 +35,10 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   roles: Role[];
+  realRoles: Role[];
+  impersonatedRole: Role | null;
+  setImpersonatedRole: (r: Role | null) => void;
+  isSuperAdmin: boolean;
   profile: Profile | null;
   loading: boolean;
   hasRole: (r: Role) => boolean;
@@ -50,24 +55,26 @@ interface BootstrapResult {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-/** Owner account that keeps a UI-only admin fallback when no user_roles row exists. */
-const ROOT_ADMIN_EMAIL = "admin@mediglo.in";
+/** Owner accounts that keep a UI-only admin fallback when no user_roles row exists. */
+const ROOT_ADMIN_EMAILS = new Set([
+  "admin@mediglo.in",
+  "himuydv5@gmail.com",
+  "vikas@mediglo.in",
+]);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [realRoles, setRealRoles] = useState<Role[]>([]);
+  const [impersonatedRole, setImpersonatedRole] = useState<Role | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadMeta = useCallback(async (uid: string, email?: string | null) => {
-    // bootstrapCurrentUser needs SUPABASE_SERVICE_ROLE_KEY on the server. On a plain
-    // localhost install that key may be absent, so treat it as best-effort and always
-    // fall through to the RLS-protected client queries below.
     try {
       const boot = (await bootstrapCurrentUser({ data: undefined })) as BootstrapResult;
-      setRoles(boot.roles ?? []);
-      setProfile(boot.profile ?? null);
+      if (boot?.roles?.length) setRealRoles(boot.roles);
+      if (boot?.profile) setProfile(boot.profile);
     } catch (err) {
       console.warn("[auth] bootstrapCurrentUser unavailable, using client role lookup:", err);
     }
@@ -78,13 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     const nextRoles = ((roleRows ?? []) as { role: Role }[]).map((r) => r.role);
     if (nextRoles.length) {
-      setRoles(nextRoles);
-    } else if (email?.toLowerCase() === ROOT_ADMIN_EMAIL) {
-      // UI-only fallback for the owner account (carried over from apps/erp). It does NOT
-      // grant database privileges: every query is still filtered by RLS on user_roles.
-      // Replace by inserting a real row: insert into user_roles(user_id, role) values ('<uid>','admin');
-      console.warn("[auth] root admin has no user_roles row; applying UI-only admin fallback");
-      setRoles(["admin"]);
+      setRealRoles(nextRoles);
+    } else if (email && ROOT_ADMIN_EMAILS.has(email.toLowerCase())) {
+      setRealRoles(["admin"]);
     }
     if (prof) setProfile(prof as Profile);
   }, []);
@@ -95,7 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.session?.user ?? null);
     if (data.session?.user) await loadMeta(data.session.user.id, data.session.user.email);
     else {
-      setRoles([]);
+      setRealRoles([]);
+      setImpersonatedRole(null);
       setProfile(null);
     }
   }, [loadMeta]);
@@ -118,12 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(sess?.user ?? null);
       if (sess?.user) {
         setLoading(true);
-        // defer to avoid deadlock inside the callback
         setTimeout(() => {
           loadMeta(sess.user.id, sess.user.email).finally(() => setLoading(false));
         }, 0);
       } else if (event === "SIGNED_OUT") {
-        setRoles([]);
+        setRealRoles([]);
+        setImpersonatedRole(null);
         setProfile(null);
         setLoading(false);
       }
@@ -134,19 +138,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [loadMeta]);
 
+  const isSuperAdmin = realRoles.includes("admin");
+  const roles = useMemo<Role[]>(
+    () => (isSuperAdmin && impersonatedRole ? [impersonatedRole] : realRoles),
+    [isSuperAdmin, impersonatedRole, realRoles],
+  );
+
   const hasRole = useCallback((r: Role) => roles.includes(r), [roles]);
   const isFinance = roles.includes("admin") || roles.includes("accountant");
-  const canBilling = isFinance || roles.includes("reception") || roles.includes("counselor");
+  const canBilling = isFinance || roles.includes("reception") || roles.includes("counselor") || roles.includes("pharmacist");
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-    setRoles([]);
+    setRealRoles([]);
+    setImpersonatedRole(null);
     setProfile(null);
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ user, session, roles, profile, loading, hasRole, isFinance, canBilling, refresh, signOut }}
+      value={{
+        user,
+        session,
+        roles,
+        realRoles,
+        impersonatedRole,
+        setImpersonatedRole,
+        isSuperAdmin,
+        profile,
+        loading,
+        hasRole,
+        isFinance,
+        canBilling,
+        refresh,
+        signOut,
+      }}
     >
       {children}
     </AuthContext.Provider>
@@ -161,8 +187,8 @@ export function useAuth() {
 
 export const ROLE_LABELS: Record<Role, string> = {
   admin: "Admin / Director",
-  doctor: "Doctor",
-  reception: "Front-Desk / Billing",
+  doctor: "Doctor / Consultant",
+  reception: "Receptionist",
   accountant: "Accountant / Finance",
   marketing: "Marketing / Leads",
   marketing_admin: "Marketing Admin",
@@ -171,6 +197,16 @@ export const ROLE_LABELS: Record<Role, string> = {
   counselor: "Counselor",
   counselor_1: "Counselor 1",
   counselor_2: "Counselor 2",
-  therapist: "Therapist / Nursing",
-  pharmacist: "Pharmacy Staff",
+  therapist: "Therapist",
+  pharmacist: "Pharmacist",
 };
+
+/** Helper to mask patient phone numbers for Therapist privacy (Module 2). */
+export function maskPhoneForRole(phone: string | null | undefined, roles: Role[]): string {
+  if (!phone) return "—";
+  const isTherapistOnly = roles.includes("therapist") && !roles.includes("admin") && !roles.includes("reception") && !roles.includes("doctor") && !roles.includes("counselor");
+  if (!isTherapistOnly) return phone;
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length <= 4) return "******";
+  return `******${digits.slice(-4)}`;
+}

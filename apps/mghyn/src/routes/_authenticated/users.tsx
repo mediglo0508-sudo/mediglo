@@ -12,35 +12,29 @@ import { Label } from "@/components/ui/label";
 import { useMaintenanceFlag } from "@/components/MaintenanceGate";
 import { useRealtimeSync } from "@/lib/realtime";
 import { toast } from "sonner";
-import { Lock, Unlock } from "lucide-react";
+import { Lock, Unlock, KeyRound } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({
     meta: [
-      { title: "Users & Roles — MGHYN Clinic ERP" },
-      { name: "description", content: "Manage user accounts, roles and billing access controls." },
+      { title: "Users, Roles & Billing Lock — MediGlo Harmony ERP" },
+      { name: "description", content: "Manage the 16 staff accounts, RBAC roles, and Maintenance Mode (Billing Lock)." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "Users & Roles — MGHYN Clinic ERP" },
-      { property: "og:description", content: "Manage user accounts, roles and billing access controls." },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://mediglo-vision.lovable.app/users" },
-      { name: "twitter:card", content: "summary" },
     ],
-    links: [{ rel: "canonical", href: "https://mediglo-vision.lovable.app/users" }],
   }),
   component: UsersPage,
 });
 
-// Operational roles the admin can map authenticated emails to.
 const ASSIGNABLE: { value: Role; label: string }[] = [
+  { value: "admin", label: "Admin / Director" },
+  { value: "accountant", label: "Accountant / Finance" },
   { value: "doctor", label: "Doctor / Consultant" },
   { value: "counselor", label: "Counselor" },
-  { value: "admin", label: "Admin / Director" },
   { value: "therapist", label: "Therapist" },
+  { value: "pharmacist", label: "Pharmacist" },
   { value: "reception", label: "Receptionist" },
-  { value: "accountant", label: "Accountant / Finance" },
-  { value: "marketing", label: "Marketing / Leads" },
   { value: "marketing_head", label: "Marketing Head" },
+  { value: "marketing", label: "Marketing / Leads" },
 ];
 
 interface StaffRow {
@@ -76,7 +70,7 @@ function UsersPage() {
           can_override_duplicate: !!p.can_override_duplicate,
         }),
       );
-      return (staff ?? []).map((s) => {
+      const list = (staff ?? []).map((s) => {
         const perm = s.user_id ? permMap.get(s.user_id) : undefined;
         return {
           ...(s as StaffRow),
@@ -86,14 +80,22 @@ function UsersPage() {
           canOverrideDuplicate: perm?.can_override_duplicate ?? false,
         };
       });
+      // Sort authenticated email accounts first (the 16 seeded user accounts)
+      return list.sort((a, b) => (b.email ? 1 : 0) - (a.email ? 1 : 0));
     },
   });
 
   async function assign(userId: string | null, role: Role) {
     if (!userId) return toast.error("This staff record has no linked login account.");
     try {
-      await assignStaffRole({ data: { userId, role } });
-      toast.success("Role assigned");
+      const label = ASSIGNABLE.find((a) => a.value === role)?.label ?? role;
+      await supabase.from("user_roles").delete().eq("user_id", userId);
+      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
+      if (error) {
+        await assignStaffRole({ data: { userId, role } });
+      }
+      await supabase.from("staff").update({ role_title: label, status: "active" }).eq("user_id", userId);
+      toast.success(`Role updated to ${label}`);
       qc.invalidateQueries({ queryKey: ["staff-directory"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Role update failed");
@@ -118,9 +120,20 @@ function UsersPage() {
   return (
     <div>
       <PageHeader
-        title="Staff Directory, Roles & Billing Lock"
-        subtitle="Every authenticated account auto-appears here. Map each email to an operational role and control per-staff billing access."
+        title="Staff Directory, Roles & Billing Lock (16 Seeded Accounts)"
+        subtitle="Map each staff email to an operational RBAC role, toggle per-staff Billing Lock, and manage Global Maintenance Mode."
       />
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-xs">
+        <div className="flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-primary shrink-0" />
+          <span>
+            <strong>Default Staff Password Policy:</strong> Initial default password for all 16 staff accounts is{" "}
+            <code className="rounded bg-background px-1.5 py-0.5 font-mono font-bold text-primary">MediGlo@12345</code>{" "}
+            (or <code className="rounded bg-background px-1.5 py-0.5 font-mono font-bold text-primary">AdminPassword2026!</code> for root admin). Staff can change their password anytime via the top-bar <strong>Password</strong> button.
+          </span>
+        </div>
+        <Badge variant="outline">{(data ?? []).filter((u) => !!u.email).length} Login Accounts</Badge>
+      </div>
       <MaintenanceToggle />
       <Card className="p-0">
         <div className="overflow-x-auto">
@@ -129,8 +142,9 @@ function UsersPage() {
               <tr>
                 <th className="p-3">Name</th>
                 <th className="p-3">Email</th>
+                <th className="p-3">Role Title</th>
                 <th className="p-3">Status</th>
-                <th className="p-3">Assigned Role</th>
+                <th className="p-3">Assigned RBAC Role</th>
                 <th className="p-3">Billing Access</th>
               </tr>
             </thead>
@@ -138,7 +152,8 @@ function UsersPage() {
               {(data ?? []).map((u) => (
                 <tr key={u.id} className="hover:bg-muted/30">
                   <td className="p-3 font-medium">{u.name || "Unnamed"}</td>
-                  <td className="p-3 text-muted-foreground">{u.email || "—"}</td>
+                  <td className="p-3 font-mono text-xs text-muted-foreground">{u.email || "— (Clinical Roster)"}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{u.role_title || "—"}</td>
                   <td className="p-3">
                     {u.status === "active" ? (
                       <Badge variant="default">Active</Badge>
@@ -147,15 +162,21 @@ function UsersPage() {
                     )}
                   </td>
                   <td className="p-3">
-                    <Select
-                      value={u.currentRole ?? ""}
-                      onValueChange={(v) => assign(u.user_id, v as Role)}
-                    >
-                      <SelectTrigger className="w-56"><SelectValue placeholder="Select role…" /></SelectTrigger>
-                      <SelectContent>
-                        {ASSIGNABLE.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                    {u.user_id ? (
+                      <Select
+                        value={u.currentRole ?? ""}
+                        onValueChange={(v) => assign(u.user_id, v as Role)}
+                      >
+                        <SelectTrigger className="w-56"><SelectValue placeholder="Select role…" /></SelectTrigger>
+                        <SelectContent>
+                          {ASSIGNABLE.map((r) => (
+                            <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">{u.role_title || "Roster Only"}</span>
+                    )}
                   </td>
                   <td className="p-3">
                     {u.user_id ? (
@@ -181,7 +202,7 @@ function UsersPage() {
                 </tr>
               ))}
               {(data?.length ?? 0) === 0 && (
-                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No staff accounts yet.</td></tr>
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No staff accounts yet.</td></tr>
               )}
             </tbody>
           </table>
@@ -191,7 +212,6 @@ function UsersPage() {
   );
 }
 
-/** Admin-only switch that flips the maintenance_mode flag in app_settings. */
 function MaintenanceToggle() {
   const qc = useQueryClient();
   const { user } = useAuth();

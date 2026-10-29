@@ -2,28 +2,24 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, AccessDenied } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { getPerformanceMetrics } from "@/lib/performance.functions";
 import { inr } from "@/lib/gst";
-import { Download, Loader2, Sparkles, Megaphone } from "lucide-react";
+import { Download, Loader2, Sparkles, Megaphone, Stethoscope, HeartHandshake } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/performance")({
   component: PerformancePage,
   head: () => ({
     meta: [
-      { title: "Performance Dashboard | Mediglo Clinic ERP" },
-      { name: "description", content: "Live therapist and marketing team performance — sessions, treatment hours, bookings, conversions and revenue." },
-      { property: "og:title", content: "Performance Dashboard | Mediglo Clinic ERP" },
-      { property: "og:description", content: "Live therapist and marketing team performance metrics for the clinic." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { title: "Staff & Conversion Performance | MediGlo Harmony ERP" },
+      { name: "description", content: "Live Doctor, Counselor, Therapist and Marketing conversion funnel & performance metrics." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:url", content: "https://mediglo-vision.lovable.app/performance" },
     ],
-    links: [{ rel: "canonical", href: "https://mediglo-vision.lovable.app/performance" }],
   }),
 });
 
@@ -56,6 +52,61 @@ function PerformancePage() {
     queryFn: () => fetchMetrics({ data: { windowDays: win } }),
   });
 
+  // Module 3 Step 3: Side-by-Side Clinical & Counselor Conversion Funnel
+  const { data: conversionData } = useQuery({
+    queryKey: ["clinical-counselor-conversion", win],
+    enabled: allowed,
+    queryFn: async () => {
+      const fromDate = new Date(Date.now() - win * 86400_000).toISOString().slice(0, 10);
+      const [{ data: appts }, { data: visits }, { data: quotes }, { data: invoices }] = await Promise.all([
+        supabase.from("appointments").select("id, status").gte("appointment_date", fromDate),
+        supabase.from("patient_visits").select("id, status, seen_doctor, counselor_slot, assigned_staff, area_of_interest"),
+        supabase.from("counselor_quotations").select("id, counselor_id, customer_name, net_total, status"),
+        supabase.from("invoices").select("id, assigned_staff, gross_total, paid_amount").is("voided_at", null).gte("invoice_date", fromDate),
+      ]);
+
+      const totalAppointments = (appts ?? []).length;
+      const visitList = visits ?? [];
+      const doctorConsultsDone = visitList.filter((v: any) => v.seen_doctor || ["doctor", "counselor", "treatment", "billing", "completed"].includes(v.status)).length;
+      const counselingSessionsDone = visitList.filter((v: any) => v.counselor_slot || ["counselor", "treatment", "billing", "completed"].includes(v.status)).length + (quotes ?? []).length;
+      const convertedInvoices = (invoices ?? []).length;
+
+      // Staff-wise conversion breakdown
+      const byStaff = new Map<string, { name: string; suggested: number; converted: number; revenue: number }>();
+      for (const i of invoices ?? []) {
+        const staffName = (i.assigned_staff || "Clinic Team").trim();
+        const cur = byStaff.get(staffName) ?? { name: staffName, suggested: 0, converted: 0, revenue: 0 };
+        cur.converted += 1;
+        cur.suggested += 1;
+        cur.revenue += Number(i.paid_amount || i.gross_total || 0);
+        byStaff.set(staffName, cur);
+      }
+      for (const v of visitList) {
+        const staffName = (v.assigned_staff || "Simran").trim();
+        const cur = byStaff.get(staffName) ?? { name: staffName, suggested: 0, converted: 0, revenue: 0 };
+        cur.suggested += 1;
+        byStaff.set(staffName, cur);
+      }
+
+      const staffConversion = [...byStaff.values()]
+        .map((s) => ({
+          ...s,
+          suggested: Math.max(s.suggested, s.converted),
+          rate: Math.round((s.converted / Math.max(1, Math.max(s.suggested, s.converted))) * 100),
+        }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 10);
+
+      return {
+        totalAppointments,
+        doctorConsultsDone,
+        counselingSessionsDone,
+        convertedInvoices,
+        staffConversion,
+      };
+    },
+  });
+
   const exportTherapists = useCallback(() => {
     if (!data) return;
     toCsv(
@@ -86,8 +137,8 @@ function PerformancePage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Performance Dashboard"
-        subtitle="Live therapist & marketing metrics — computed from treatments, appointments, follow-ups and invoices."
+        title="Staff & Clinical Conversion Performance Dashboard"
+        subtitle="Appointments → Doctor Consultations → Counseling Quotations → Purchased Packages & Therapist Productivity."
       />
       <div className="flex flex-wrap items-center gap-2">
         {WINDOWS.map((w) => (
@@ -99,6 +150,49 @@ function PerformancePage() {
           {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
         </Button>
       </div>
+
+      {/* Module 3 Step 3: Side-by-Side Comparison & Conversion Funnel */}
+      <Card className="border-primary/20 p-4">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-bold">
+          <Stethoscope className="h-4 w-4 text-primary" />
+          Side-by-Side Clinical & Counselor Conversion Funnel (Last {win} Days)
+        </h3>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard label="1. Total Appointments" value={String(conversionData?.totalAppointments ?? 0)} />
+          <StatCard label="2. Doctor Consultations Done" value={String(conversionData?.doctorConsultsDone ?? 0)} />
+          <StatCard label="3. Counseling Sessions Done" value={String(conversionData?.counselingSessionsDone ?? 0)} />
+          <StatCard label="4. Purchased / Billed Conversions" value={String(conversionData?.convertedInvoices ?? 0)} />
+        </div>
+
+        {(conversionData?.staffConversion ?? []).length > 0 && (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="py-2 text-left">Doctor / Counselor / Staff</th>
+                  <th className="text-right">Suggested / Pitch Count</th>
+                  <th className="text-right">Purchased / Converted Bills</th>
+                  <th className="text-right">Conversion Rate (%)</th>
+                  <th className="text-right">Converted Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(conversionData?.staffConversion ?? []).map((s) => (
+                  <tr key={s.name} className="border-t">
+                    <td className="py-1.5 font-medium">{s.name}</td>
+                    <td className="text-right">{s.suggested}</td>
+                    <td className="text-right">{s.converted}</td>
+                    <td className="text-right">
+                      <Badge variant="secondary">{s.rate}%</Badge>
+                    </td>
+                    <td className="text-right font-semibold">{inr(s.revenue)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
 
       {isLoading || !data ? (
         <div className="flex items-center gap-2 text-muted-foreground">
@@ -118,7 +212,7 @@ function PerformancePage() {
           </div>
 
           <Section
-            title="Therapist performance"
+            title="Therapist Floor Productivity & Duration Tracking"
             icon={<Sparkles className="h-4 w-4 text-primary" />}
             onExport={exportTherapists}
           >
@@ -153,7 +247,7 @@ function PerformancePage() {
           </Section>
 
           <Section
-            title="Marketing team performance"
+            title="Marketing & Lead Conversion Performance"
             icon={<Megaphone className="h-4 w-4 text-primary" />}
             onExport={exportMarketing}
           >

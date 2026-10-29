@@ -70,9 +70,8 @@ function bucketForRawMode(raw: string): string {
 function Dashboard() {
   const { isFinance, hasRole, profile } = useAuth();
   if (isFinance) return <FinanceDashboard name={profile?.full_name} />;
-  if (hasRole("doctor") || hasRole("counselor")) return <DoctorDashboard />;
-  if (hasRole("reception")) return <ReceptionDashboard />;
-  return <FinanceDashboard name={profile?.full_name} />;
+  if (hasRole("doctor") || hasRole("counselor") || hasRole("therapist")) return <DoctorDashboard />;
+  return <ReceptionDashboard />;
 }
 
 function Stat({ icon: Icon, label, value, accent, onDoubleClick, onClick }: { icon: typeof Wallet; label: string; value: string; accent?: string; onDoubleClick?: () => void; onClick?: () => void }) {
@@ -126,17 +125,17 @@ function FinanceDashboard({ name }: { name?: string | null }) {
         ? await supabase
             .from("service_consumption")
             .select("service_name, total_cost, invoice_id")
-            .in("invoice_id", invIds)
-        : { data: [] as { service_name: string | null; total_cost: number; invoice_id: string }[] };
-      // Strict categorisation: `invoice_lines.item_category` is the immutable tag written
-      // at billing time; legacy rows fall back to master matching (see item-category.ts).
+            .limit(5000)
+        : { data: [] as { service_name: string | null; total_cost: number; invoice_id: string | null }[] };
       const [prodRes, svcRes] = await Promise.all([
         supabase.from("inventory").select("name").eq("active", true),
-        supabase.from("services_master").select("name, category, sac_code").eq("active", true),
+        supabase.from("services_master").select("name, category, sac_code, cost_estimate").eq("active", true),
       ]);
       const catalog = buildCatalogIndex(prodRes.data ?? [], svcRes.data ?? []);
+      const svcCostEstMap = new Map((svcRes.data ?? []).map((s: any) => [String(s.name ?? "").trim().toLowerCase(), Number(s.cost_estimate ?? 0)]));
+      const invIdSet = new Set(invIds);
       const invLines = linesRes.data ?? [];
-      const consumption = consRes.data ?? [];
+      const consumption = (consRes.data ?? []).filter((c) => !c.invoice_id || invIdSet.has(c.invoice_id));
       const invById = new Map(invoices.map((i) => [i.id, i]));
       const productLines = invLines
         .filter((l) => lineCategory(l, catalog) === "product")
@@ -208,17 +207,26 @@ function FinanceDashboard({ name }: { name?: string | null }) {
       const bank = Math.max(0, collected - cash);
 
       const svcGross: Record<string, number> = {};
+      const svcBomCost: Record<string, number> = {};
       for (const l of invLines) {
         const key = (l.description ?? "Misc").trim();
-        svcGross[key] = (svcGross[key] ?? 0) + Number(l.line_total);
+        const lineAmt = Number(l.line_total);
+        const qty = Math.max(1, Number(l.qty) || 1);
+        svcGross[key] = (svcGross[key] ?? 0) + lineAmt;
+        const unitCostEst = svcCostEstMap.get(key.toLowerCase()) || Math.round((lineAmt / qty) * 0.14);
+        svcBomCost[key] = (svcBomCost[key] ?? 0) + unitCostEst * qty;
       }
       const svcCost: Record<string, number> = {};
       for (const c of consumption) {
-        const key = (c.service_name ?? "Misc").trim();
+        const key = (c.service_name ?? "Misc").trim().toLowerCase();
         svcCost[key] = (svcCost[key] ?? 0) + Number(c.total_cost);
       }
       const servicePnl = Object.keys(svcGross)
-        .map((k) => ({ name: k, gross: svcGross[k], cost: svcCost[k] ?? 0, net: svcGross[k] - (svcCost[k] ?? 0) }))
+        .map((k) => {
+          const grossVal = Math.round(svcGross[k]);
+          const costVal = Math.round(Math.max(svcCost[k.toLowerCase()] ?? 0, svcBomCost[k] ?? 0));
+          return { name: k, gross: grossVal, cost: costVal, net: grossVal - costVal };
+        })
         .sort((a, b) => b.gross - a.gross)
         .slice(0, 12);
 

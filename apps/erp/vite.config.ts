@@ -1,20 +1,23 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "node:path";
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+  plugins: [],
+  nitro: {
+    preset: "node-server",
+  },
+  vite: {
+    server: {
+      host: "0.0.0.0",
+      port: 3000,
+    },
+    resolve: {
+      // Keep Start and application imports on one router context during HMR.
+      dedupe: ["@tanstack/react-router", "@tanstack/router-core"],
     },
   },
-  server: {
-    port: 5173,
-  },
-  build: {
-    outDir: "dist",
-    sourcemap: true,
+  tanstackStart: {
+    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
+    // nitro/vite builds from this
+    server: { entry: "server" },
   },
 });
