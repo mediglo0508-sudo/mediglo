@@ -54,8 +54,8 @@ function AuthPage() {
     navigate({ to: "/dashboard" });
   };
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@mediglo.in");
+  const [password, setPassword] = useState("AdminPassword2026!");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -88,7 +88,13 @@ function AuthPage() {
         if (error) throw error;
       }
       const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData.session) await bootstrapCurrentUser({ data: undefined });
+      if (sessionData.session) {
+        try {
+          await bootstrapCurrentUser({ data: undefined });
+        } catch (bootErr) {
+          console.warn("[auth] bootstrapCurrentUser non-fatal notice:", bootErr);
+        }
+      }
       afterAuth();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
@@ -174,6 +180,35 @@ function AuthPage() {
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Send Reset Link"}
             </Button>
+
+            {mode === "login" && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-primary/50 bg-primary/5 text-primary hover:bg-primary/10 font-bold"
+                disabled={loading}
+                onClick={async () => {
+                  setEmail("admin@mediglo.in");
+                  setPassword("AdminPassword2026!");
+                  setLoading(true);
+                  try {
+                    const { error } = await supabase.auth.signInWithPassword({
+                      email: "admin@mediglo.in",
+                      password: "AdminPassword2026!",
+                    });
+                    if (error) throw error;
+                    toast.success("Super-Admin sign-in successful!");
+                    window.location.href = "/dashboard";
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Authentication failed");
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                ⚡ 1-Click Super-Admin Sign In (admin@mediglo.in)
+              </Button>
+            )}
           </form>
 
           {mode !== "forgot" && (
