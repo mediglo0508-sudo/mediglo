@@ -273,14 +273,23 @@ db.exec(`
     id TEXT PRIMARY KEY,
     customer_id TEXT,
     customer_name TEXT,
+    phone TEXT,
+    email TEXT,
+    gender TEXT,
     service_id TEXT,
     service_name TEXT,
+    service_inquiry TEXT,
+    appointment_date TEXT,
+    appointment_time TEXT,
     start_time TEXT,
     end_time TEXT,
     status TEXT DEFAULT 'scheduled',
     staff_id TEXT,
     notes TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    wallet_id TEXT,
+    integration_key TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS patient_visits (
@@ -391,6 +400,20 @@ db.exec(`
   );
 `);
 
+// Ensure dynamic columns exist in SQLite tables
+const ensureCol = (tbl, col, def) => {
+  try { db.prepare(`ALTER TABLE "${tbl}" ADD COLUMN "${col}" ${def}`).run(); } catch {}
+};
+ensureCol("appointments", "appointment_date", "TEXT");
+ensureCol("appointments", "appointment_time", "TEXT");
+ensureCol("appointments", "service_inquiry", "TEXT");
+ensureCol("appointments", "phone", "TEXT");
+ensureCol("appointments", "email", "TEXT");
+ensureCol("appointments", "gender", "TEXT");
+ensureCol("appointments", "wallet_id", "TEXT");
+ensureCol("appointments", "integration_key", "TEXT");
+ensureCol("appointments", "updated_at", "TEXT");
+
 // Master Seeding Function
 function seedMasterData() {
   const meta = db.prepare("SELECT value FROM _schema_meta WHERE key = 'seeded_version'").get();
@@ -408,29 +431,6 @@ function seedMasterData() {
       INSERT OR REPLACE INTO services_master (id, category, name, sac_code, gst_rate, default_price, cost_estimate, active, gap_days, duration_minutes, auto_followup, auto_appointment, consumables, sessions, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    if (table === "client_registrations") {
-      for (const item of items) {
-        const cleanPhone = (item.mobile_no || "").trim();
-        const fullName = `${(item.first_name || "").toUpperCase()} ${item.last_name || ""}`.trim();
-        let cust = null;
-        if (cleanPhone) {
-          cust = db.prepare("SELECT * FROM customers WHERE phone = ?").get(cleanPhone);
-        }
-        if (!cust && fullName) {
-          cust = db.prepare("SELECT * FROM customers WHERE lower(name) = lower(?)").get(fullName);
-        }
-        if (cust) {
-          item.customer_id = cust.id;
-          db.prepare("UPDATE customers SET age = COALESCE(?, age), gender = COALESCE(?, gender), city = COALESCE(?, city), email = COALESCE(?, email), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-            .run(item.age, item.gender, item.city, item.email, cust.id);
-        } else {
-          const custId = "c-" + Math.random().toString(36).slice(2, 10);
-          item.customer_id = custId;
-          db.prepare("INSERT INTO customers (id, name, phone, age, gender, city, email, state_code, client_type, outstanding_balance) VALUES (?, ?, ?, ?, ?, ?, ?, '06', 'New', 0)")
-            .run(custId, fullName || "Walk-in Client", cleanPhone || null, item.age || null, item.gender || null, item.city || "Gurugram", item.email || null);
-        }
-      }
-    }
 
     db.exec("BEGIN TRANSACTION;");
     for (const s of services) {

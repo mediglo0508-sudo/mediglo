@@ -37,7 +37,7 @@ const DONE = ["done", "completed", "complete", "closed", "converted"];
 
 export const getPerformanceMetrics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { windowDays?: number } | undefined) => d ?? {})
+  .validator((d: { windowDays?: number } | undefined) => d ?? {})
   .handler(async ({ data, context }): Promise<PerformancePayload> => {
     const windowDays = Math.max(1, Math.min(365, data.windowDays ?? 30));
     const fromDate = new Date(Date.now() - windowDays * 86400_000);

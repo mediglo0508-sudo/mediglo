@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CampRouteImport } from './routes/camp'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as VipCampRouteImport } from './routes/vip-camp'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
@@ -49,6 +51,7 @@ import { Route as AuthenticatedTemplateStudioRouteImport } from './routes/_authe
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedVouchersRouteImport } from './routes/_authenticated/vouchers'
 import { Route as ApiAiManagerRouteImport } from './routes/api/ai-manager'
+import { Route as ApiCampLeadsRouteImport } from './routes/api/camp-leads'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as ResourcesMedicalBillingGuideRouteImport } from './routes/resources.medical-billing-guide'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -80,6 +83,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CampRoute = CampRouteImport.update({
+  id: '/camp',
+  path: '/camp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
@@ -98,6 +106,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VipCampRoute = VipCampRouteImport.update({
+  id: '/vip-camp',
+  path: '/vip-camp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Char91DotmcpChar93ListToolsRoute =
@@ -276,6 +289,11 @@ const ApiAiManagerRoute = ApiAiManagerRouteImport.update({
   path: '/api/ai-manager',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCampLeadsRoute = ApiCampLeadsRouteImport.update({
+  id: '/api/camp-leads',
+  path: '/api/camp-leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
   id: '/oauth/authorize',
   path: '/oauth/authorize',
@@ -370,10 +388,12 @@ const ApiPublicOauthUserinfoRoute = ApiPublicOauthUserinfoRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/camp': typeof CampRoute
   '/mcp': typeof McpRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/vip-camp': typeof VipCampRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -407,6 +427,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/vouchers': typeof AuthenticatedVouchersRoute
   '/api/ai-manager': typeof ApiAiManagerRoute
+  '/api/camp-leads': typeof ApiCampLeadsRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/resources/medical-billing-guide': typeof ResourcesMedicalBillingGuideRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -427,10 +448,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/camp': typeof CampRoute
   '/mcp': typeof McpRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/vip-camp': typeof VipCampRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -464,6 +487,7 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/vouchers': typeof AuthenticatedVouchersRoute
   '/api/ai-manager': typeof ApiAiManagerRoute
+  '/api/camp-leads': typeof ApiCampLeadsRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/resources/medical-billing-guide': typeof ResourcesMedicalBillingGuideRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -486,10 +510,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/camp': typeof CampRoute
   '/mcp': typeof McpRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/vip-camp': typeof VipCampRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
@@ -523,6 +549,7 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/vouchers': typeof AuthenticatedVouchersRoute
   '/api/ai-manager': typeof ApiAiManagerRoute
+  '/api/camp-leads': typeof ApiCampLeadsRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/resources/medical-billing-guide': typeof ResourcesMedicalBillingGuideRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -545,10 +572,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/camp'
     | '/mcp'
     | '/register'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/vip-camp'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/analytics'
@@ -582,6 +611,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/vouchers'
     | '/api/ai-manager'
+    | '/api/camp-leads'
     | '/oauth/authorize'
     | '/resources/medical-billing-guide'
     | '/.lovable/oauth/consent'
@@ -602,10 +632,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/camp'
     | '/mcp'
     | '/register'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/vip-camp'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/analytics'
@@ -639,6 +671,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/vouchers'
     | '/api/ai-manager'
+    | '/api/camp-leads'
     | '/oauth/authorize'
     | '/resources/medical-billing-guide'
     | '/.lovable/oauth/consent'
@@ -660,10 +693,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/camp'
     | '/mcp'
     | '/register'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/vip-camp'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/analytics'
@@ -697,6 +732,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/_authenticated/vouchers'
     | '/api/ai-manager'
+    | '/api/camp-leads'
     | '/oauth/authorize'
     | '/resources/medical-billing-guide'
     | '/.lovable/oauth/consent'
@@ -719,13 +755,16 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CampRoute: typeof CampRoute
   McpRoute: typeof McpRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  VipCampRoute: typeof VipCampRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiAiManagerRoute: typeof ApiAiManagerRoute
+  ApiCampLeadsRoute: typeof ApiCampLeadsRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   ResourcesMedicalBillingGuideRoute: typeof ResourcesMedicalBillingGuideRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -767,6 +806,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/camp': {
+      id: '/camp'
+      path: '/camp'
+      fullPath: '/camp'
+      preLoaderRoute: typeof CampRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mcp': {
       id: '/mcp'
       path: '/mcp'
@@ -793,6 +839,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vip-camp': {
+      id: '/vip-camp'
+      path: '/vip-camp'
+      fullPath: '/vip-camp'
+      preLoaderRoute: typeof VipCampRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -1026,6 +1079,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiManagerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/camp-leads': {
+      id: '/api/camp-leads'
+      path: '/api/camp-leads'
+      fullPath: '/api/camp-leads'
+      preLoaderRoute: typeof ApiCampLeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/oauth/authorize': {
       id: '/oauth/authorize'
       path: '/oauth/authorize'
@@ -1214,14 +1274,17 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CampRoute: CampRoute,
   McpRoute: McpRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  VipCampRoute: VipCampRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiAiManagerRoute: ApiAiManagerRoute,
+  ApiCampLeadsRoute: ApiCampLeadsRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   ResourcesMedicalBillingGuideRoute: ResourcesMedicalBillingGuideRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
