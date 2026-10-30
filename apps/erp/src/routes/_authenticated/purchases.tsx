@@ -14,7 +14,9 @@ import { inr2, round2 } from "@/lib/gst";
 import { invalidateInventory } from "@/lib/inventory-stock";
 import { useRealtimeSync } from "@/lib/realtime";
 import { toast } from "sonner";
-import { Loader2, ShoppingBag, Save } from "lucide-react";
+import { Loader2, ShoppingBag, Save, Sparkles, Scan } from "lucide-react";
+import { SmartBillOcrDialog } from "@/components/SmartBillOcrDialog";
+import type { ParsedBill } from "@/lib/ocr-bill-parser";
 
 export const Route = createFileRoute("/_authenticated/purchases")({
   head: () => ({
@@ -34,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/purchases")({
 });
 
 function PurchasesPage() {
-  const { isFinance } = useAuth();
+  const { isFinance, roles } = useAuth();
   const qc = useQueryClient();
   const [vendor, setVendor] = useState("");
   const [gstin, setGstin] = useState("");
@@ -49,6 +51,7 @@ function PurchasesPage() {
   const [billNo, setBillNo] = useState("");
   const [payStatus, setPayStatus] = useState("Pending");
   const [saving, setSaving] = useState(false);
+  const [ocrOpen, setOcrOpen] = useState(false);
 
   useRealtimeSync(["purchases", "inventory"], ["purchases-list", "inventory-purchases"]);
   const { data: vendors } = useQuery({
@@ -161,11 +164,131 @@ function PurchasesPage() {
     }
   }
 
-  if (!isFinance) return <AccessDenied />;
+  function handleApplyBill(bill: ParsedBill) {
+    if (bill.vendorName) setVendor(bill.vendorName);
+    if (bill.billNo) setBillNo(bill.billNo);
+    if (bill.billDate) setDate(bill.billDate);
+    if (bill.items.length > 0) {
+      const first = bill.items[0];
+      setProduct(first.name);
+      setRate(String(first.rate));
+      setQty(String(first.quantity));
+      setGstPct(String(first.gstPct));
+      if (first.batchNo) {
+        setHsn(`Batch:${first.batchNo}`);
+      }
+    }
+    toast.info(`Populated vendor & first line item from Bill #${bill.billNo || "OCR"}`);
+  }
+
+  async function handleDirectStockIn(bill: ParsedBill) {
+    if (!bill.items.length) return;
+    try {
+      // 1. Upsert vendor if identified
+      let vendorId: string | null = null;
+      if (bill.vendorName) {
+        const existing = (vendors ?? []).find(
+          (v) => v.name.toLowerCase() === bill.vendorName.trim().toLowerCase(),
+        );
+        if (existing) {
+          vendorId = existing.id;
+        } else {
+          const { data } = await supabase
+            .from("vendors")
+            .insert({ name: bill.vendorName.trim() })
+            .select("id")
+            .single();
+          vendorId = data?.id ?? null;
+        }
+      }
+
+      // 2. Loop through all extracted line items
+      for (const item of bill.items) {
+        const numericQty = item.quantity > 0 ? item.quantity : 1;
+        const purchaseRate = item.rate > 0 ? item.rate : (item.mrp || 0);
+
+        await supabase.from("purchases").insert({
+          vendor_id: vendorId,
+          company_name: bill.vendorName || "Vendor Bill OCR",
+          product_name: item.name,
+          purchase_rate: purchaseRate,
+          gst_pct: item.gstPct || 5,
+          quantity: numericQty,
+          purchase_date: bill.billDate || new Date().toISOString().slice(0, 10),
+          payment_status: "Pending",
+          bill_no: bill.billNo || null,
+          hsn_code: item.batchNo ? `Batch:${item.batchNo}` : null,
+        });
+
+        // 3. Find or create in inventory
+        let invId = item.matchedInventoryId;
+        if (!invId) {
+          const found = (inventoryItems ?? []).find(
+            (i) => i.name.toLowerCase() === item.name.toLowerCase(),
+          );
+          invId = found?.id ?? null;
+        }
+        if (!invId) {
+          const { data: createdInv } = await supabase
+            .from("inventory")
+            .insert({
+              name: item.name,
+              company: bill.vendorName || "Vendor OCR",
+              rate: item.mrp || purchaseRate,
+              stock: 0,
+              category: "Pharmacy",
+              active: true,
+            })
+            .select("id")
+            .single();
+          invId = createdInv?.id ?? null;
+        }
+
+        // 4. Restock inventory with batch/expiry audit note
+        if (invId) {
+          const note = `OCR Stock In · Bill ${bill.billNo || "Direct"}${
+            item.batchNo ? ` · Batch ${item.batchNo}` : ""
+          }${item.expiry ? ` · Exp ${item.expiry}` : ""}`;
+          await supabase.rpc("restock_inventory", {
+            p_items: [{ inventory_id: invId, qty: numericQty }],
+            p_movement_type: "Purchase Inward",
+            p_source: "Smart Purchase OCR",
+            p_note: note,
+          });
+        }
+      }
+
+      invalidateInventory(qc);
+      qc.invalidateQueries({ queryKey: ["purchases-list"] });
+      refetch();
+      toast.success(
+        `Successfully stocked-in ${bill.items.length} items from Bill #${bill.billNo || "OCR"}`,
+      );
+    } catch (err) {
+      console.error("[purchases] OCR Stock In error:", err);
+      toast.error("Failed to stock-in all items");
+    }
+  }
+
+  const canAccess = isFinance || roles.includes("pharmacist");
+  if (!canAccess) return <AccessDenied />;
 
   return (
     <div>
-      <PageHeader title="Smart Purchase & Vendors" subtitle="Vendor auto-fill · automated stock-in addition · purchase ledger" />
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Smart Purchase &amp; Vendors</h1>
+          <p className="text-sm text-muted-foreground">Vendor auto-fill · automated stock-in addition · purchase ledger</p>
+        </div>
+        <Button
+          onClick={() => setOcrOpen(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium gap-2 shadow-sm"
+        >
+          <Sparkles className="h-4 w-4" />
+          <Scan className="h-4 w-4" />
+          Scan / Upload Vendor Bill (Smart OCR)
+        </Button>
+      </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="relative p-5">
           <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold"><ShoppingBag className="h-4 w-4" /> New Purchase Entry</h3>
@@ -252,6 +375,15 @@ function PurchasesPage() {
           </div>
         </Card>
       </div>
+
+      <SmartBillOcrDialog
+        open={ocrOpen}
+        onOpenChange={setOcrOpen}
+        inventory={inventoryItems ?? []}
+        vendors={vendors ?? []}
+        onApplyBill={handleApplyBill}
+        onDirectStockIn={handleDirectStockIn}
+      />
     </div>
   );
 }

@@ -23,7 +23,8 @@ import { invalidateLedger } from "@/lib/ledger-cache";
 import { QuickAddDialog, type QuickAddResult } from "@/components/QuickAddDialog";
 import { generateAutomatedSessions, pushNotification } from "@/lib/cos-engine";
 import { toast } from "sonner";
-import { Plus, Trash2, Loader2, Receipt, Printer, Boxes, CalendarClock, Wallet } from "lucide-react";
+import { Plus, Trash2, Loader2, Receipt, Printer, Boxes, CalendarClock, Wallet, MessageCircle, Share2 } from "lucide-react";
+import { downloadInvoicePdf, shareInvoiceViaWhatsApp, type InvoiceShareData } from "@/lib/invoice-whatsapp-pdf";
 import { useActiveWallets } from "@/lib/wallet-alerts";
 import { logTreatmentSessions } from "@/lib/wallet-redeem";
 import { WalletRedeemDialog } from "@/components/WalletRedeemDialog";
@@ -1030,6 +1031,60 @@ function POSPage() {
     );
   }
 
+  async function saveAndSendToWhatsApp() {
+    const currentCustName = custName.trim();
+    const currentPhone = custPhone;
+    const currentLines = lines.filter((l) => l.description.trim() && l.qty > 0);
+    const currentFin = final;
+    const currentPayMode = paymentMode;
+    const currentDate = invoiceDate;
+
+    if (!currentCustName) return toast.error("Enter customer name");
+    if (!currentLines.length) return toast.error("Add at least one service or medicine");
+
+    const invId = await saveInvoice({ withPrint: false });
+    if (!invId) return;
+
+    // Retrieve generated invoice number
+    const { data: savedInv } = await supabase
+      .from("invoices")
+      .select("invoice_no")
+      .eq("id", String(invId))
+      .maybeSingle();
+
+    const actualInvNo = savedInv?.invoice_no || `MG-${Date.now().toString().slice(-8)}`;
+
+    const shareData: InvoiceShareData = {
+      invoiceNo: actualInvNo,
+      invoiceDate: currentDate,
+      customerName: currentCustName,
+      customerPhone: currentPhone ? String(currentPhone) : null,
+      paymentMode: currentPayMode,
+      lines: currentLines.map((l) => ({
+        description: l.description,
+        qty: l.qty,
+        rate: l.unit_price,
+        total: round2(l.unit_price * l.qty),
+      })),
+      baseAmount: currentFin.base,
+      cgst: currentFin.cgst,
+      sgst: currentFin.sgst,
+      grossTotal: currentFin.gross,
+      paidAmount: Number(paidAmount) || currentFin.gross,
+    };
+
+    // 1. Download official branded PDF
+    const fileName = downloadInvoicePdf(shareData);
+    toast.success(`Generated & downloaded ${fileName}`);
+
+    // 2. Open WhatsApp Web / App with pre-filled thank you note & breakdown
+    shareInvoiceViaWhatsApp(shareData, fileName);
+
+    // Reset cart for next client
+    setLines([newLine()]);
+    setPaidAmount("");
+    setPaySplits([]);
+  }
 
   if (!canBilling) return <AccessDenied />;
 
@@ -1489,6 +1544,14 @@ function POSPage() {
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="mr-1 h-4 w-4" />} Save & Print
               </Button>
             </div>
+            <Button
+              className="mt-2.5 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm gap-2"
+              disabled={saving}
+              onClick={saveAndSendToWhatsApp}
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
+              Save &amp; Send to WhatsApp (PDF + Thank You)
+            </Button>
             <p className="mt-2 text-center text-xs text-muted-foreground">Save commits & clears; Print reprints last saved invoice; Save &amp; Print does both.</p>
 
           </Card>

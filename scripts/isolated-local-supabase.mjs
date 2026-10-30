@@ -398,7 +398,51 @@ db.exec(`
     gstin TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TABLE IF NOT EXISTS clinical_ai_patterns (
+    id TEXT PRIMARY KEY,
+    concern TEXT,
+    diagnosis TEXT,
+    medicine_name TEXT,
+    dosage TEXT,
+    frequency TEXT,
+    duration TEXT,
+    category TEXT DEFAULT 'oral',
+    contraindications TEXT,
+    times_prescribed INTEGER DEFAULT 1,
+    confidence_score REAL DEFAULT 0.95,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
 `);
+
+const checkAiPatterns = db.prepare("SELECT count(*) as c FROM clinical_ai_patterns").get();
+if (!checkAiPatterns || checkAiPatterns.c === 0) {
+  console.log("[Isolated DB] Seeding initial Clinical AI Prescription Patterns...");
+  const insertPattern = db.prepare(`
+    INSERT INTO clinical_ai_patterns (id, concern, diagnosis, medicine_name, dosage, frequency, duration, category, contraindications, times_prescribed, confidence_score)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const initialPatterns = [
+    ["pat-1", "Acne", "Acne Vulgaris", "Tab. Doxycycline 100mg", "100mg", "1 tab OD after dinner", "14 days", "oral", JSON.stringify(["pregnancy", "lactation", "sulfa"]), 12, 0.98],
+    ["pat-2", "Acne", "Acne Vulgaris", "Adapalene 0.1% + Clindamycin 1% Gel", "0.1% / 1%", "Apply thin layer at night", "30 days", "topical", JSON.stringify(["retinoid", "pregnancy"]), 15, 0.99],
+    ["pat-3", "Acne", "Acne Vulgaris", "Ceramide Barrier Repair Moisturizer", "Liberal", "Apply BD", "30 days", "topical", JSON.stringify([]), 18, 0.99],
+    ["pat-4", "Acne", "Acne Vulgaris", "Oil-Free Broad Spectrum Sunscreen SPF 50", "SPF 50", "Apply every 3 hours (Morning/Noon)", "30 days", "topical", JSON.stringify([]), 20, 0.99],
+    ["pat-5", "Melasma", "Mixed Melasma & Hyperpigmentation", "Tab. Tranexamic Acid 250mg", "250mg", "1 tab BD after meals", "30 days", "oral", JSON.stringify(["thrombosis", "stroke"]), 14, 0.97],
+    ["pat-6", "Melasma", "Mixed Melasma & Hyperpigmentation", "Kojic Acid 2% + Arbutin + Niacinamide Serum", "2% / 1% / 4%", "Apply night", "45 days", "topical", JSON.stringify([]), 16, 0.98],
+    ["pat-7", "Melasma", "Mixed Melasma & Hyperpigmentation", "Tab. Liposomal Vitamin C 1000mg + Glutathione 500mg", "1000mg / 500mg", "1 tab OD morning", "30 days", "oral", JSON.stringify([]), 11, 0.96],
+    ["pat-8", "Melasma", "Mixed Melasma & Hyperpigmentation", "Tinted Mineral Sunscreen SPF 50+", "SPF 50+", "Apply every 3 hours", "30 days", "topical", JSON.stringify([]), 19, 0.99],
+    ["pat-9", "Hair Loss", "Androgenetic Alopecia", "Minoxidil 5% + Finasteride 0.1% Solution", "5% / 0.1%", "1ml twice daily on dry scalp", "60 days", "topical", JSON.stringify(["pregnancy", "female_childbearing"]), 22, 0.99],
+    ["pat-10", "Hair Loss", "Telogen Effluvium & Thinning", "Tab. Biotin 10mg + Saw Palmetto Complex", "10mg", "1 tab OD after breakfast", "60 days", "oral", JSON.stringify([]), 19, 0.98],
+    ["pat-11", "Hair Loss", "Scalp Dermatitis & Thinning", "Ketoconazole 2% Scalp Solution", "2%", "Twice weekly wash", "30 days", "topical", JSON.stringify([]), 15, 0.97],
+    ["pat-12", "Anti-Aging", "Facial Photoaging & Wrinkles", "Peptide + Hyaluronic Acid Intensive Serum", "Liberal", "Apply BD", "30 days", "topical", JSON.stringify([]), 14, 0.96],
+    ["pat-13", "Anti-Aging", "Fine Lines & Photoaging", "Retinol 0.5% Night Renewal Cream", "0.5%", "Apply alternate nights", "30 days", "topical", JSON.stringify(["pregnancy", "retinoid"]), 13, 0.95],
+    ["pat-14", "Scars", "Atrophic Acne Scars", "Centella Asiatica + Niacinamide Soothing Gel", "Liberal", "Apply BD", "30 days", "topical", JSON.stringify([]), 10, 0.95],
+  ];
+  for (const p of initialPatterns) {
+    insertPattern.run(...p);
+  }
+}
 
 // Ensure dynamic columns exist in SQLite tables
 const ensureCol = (tbl, col, def) => {
@@ -520,29 +564,6 @@ function seedMasterData() {
       INSERT OR REPLACE INTO customers (id, name, phone, state_code, client_type, age, gender, customer_code, outstanding_balance, internal_notes, city, email, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    if (table === "client_registrations") {
-      for (const item of items) {
-        const cleanPhone = (item.mobile_no || "").trim();
-        const fullName = `${(item.first_name || "").toUpperCase()} ${item.last_name || ""}`.trim();
-        let cust = null;
-        if (cleanPhone) {
-          cust = db.prepare("SELECT * FROM customers WHERE phone = ?").get(cleanPhone);
-        }
-        if (!cust && fullName) {
-          cust = db.prepare("SELECT * FROM customers WHERE lower(name) = lower(?)").get(fullName);
-        }
-        if (cust) {
-          item.customer_id = cust.id;
-          db.prepare("UPDATE customers SET age = COALESCE(?, age), gender = COALESCE(?, gender), city = COALESCE(?, city), email = COALESCE(?, email), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-            .run(item.age, item.gender, item.city, item.email, cust.id);
-        } else {
-          const custId = "c-" + Math.random().toString(36).slice(2, 10);
-          item.customer_id = custId;
-          db.prepare("INSERT INTO customers (id, name, phone, age, gender, city, email, state_code, client_type, outstanding_balance) VALUES (?, ?, ?, ?, ?, ?, ?, '06', 'New', 0)")
-            .run(custId, fullName || "Walk-in Client", cleanPhone || null, item.age || null, item.gender || null, item.city || "Gurugram", item.email || null);
-        }
-      }
-    }
 
     db.exec("BEGIN TRANSACTION;");
     for (const c of customers) {
@@ -583,31 +604,8 @@ function seedMasterData() {
       if (Array.isArray(data) && data.length > 0) {
         const placeholders = cols.map(() => "?").join(", ");
         const stmt = db.prepare(`INSERT OR REPLACE INTO ${table} (${cols.join(", ")}) VALUES (${placeholders})`);
-        if (table === "client_registrations") {
-      for (const item of items) {
-        const cleanPhone = (item.mobile_no || "").trim();
-        const fullName = `${(item.first_name || "").toUpperCase()} ${item.last_name || ""}`.trim();
-        let cust = null;
-        if (cleanPhone) {
-          cust = db.prepare("SELECT * FROM customers WHERE phone = ?").get(cleanPhone);
-        }
-        if (!cust && fullName) {
-          cust = db.prepare("SELECT * FROM customers WHERE lower(name) = lower(?)").get(fullName);
-        }
-        if (cust) {
-          item.customer_id = cust.id;
-          db.prepare("UPDATE customers SET age = COALESCE(?, age), gender = COALESCE(?, gender), city = COALESCE(?, city), email = COALESCE(?, email), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-            .run(item.age, item.gender, item.city, item.email, cust.id);
-        } else {
-          const custId = "c-" + Math.random().toString(36).slice(2, 10);
-          item.customer_id = custId;
-          db.prepare("INSERT INTO customers (id, name, phone, age, gender, city, email, state_code, client_type, outstanding_balance) VALUES (?, ?, ?, ?, ?, ?, ?, '06', 'New', 0)")
-            .run(custId, fullName || "Walk-in Client", cleanPhone || null, item.age || null, item.gender || null, item.city || "Gurugram", item.email || null);
-        }
-      }
-    }
 
-    db.exec("BEGIN TRANSACTION;");
+        db.exec("BEGIN TRANSACTION;");
         for (const row of data) {
           stmt.run(...cols.map(c => row[c] ?? null));
         }

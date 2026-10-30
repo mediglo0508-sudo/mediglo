@@ -12,8 +12,34 @@ import {
 } from "@/components/ui/select";
 import { useServiceCatalog, useProductCatalog } from "@/lib/catalog";
 import { inr2 } from "@/lib/gst";
-import { Plus, Trash2, ArrowRight } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  ArrowRight,
+  Sparkles,
+  ShieldAlert,
+  ShieldCheck,
+  CheckCircle2,
+  Pill,
+  AlertTriangle,
+  RotateCcw,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+
+interface ClinicalAiPattern {
+  id: string;
+  concern: string;
+  diagnosis: string;
+  medicine_name: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  category: string;
+  contraindications: string;
+  times_prescribed: number;
+  confidence_score: number;
+}
 
 interface RecItem {
   id: string;
@@ -44,6 +70,28 @@ export function DoctorTreatmentRecommendation() {
 
   const { data: services = [] } = useServiceCatalog();
   const { data: products = [] } = useProductCatalog();
+
+  const { data: aiPatterns = [], refetch: refetchPatterns } = useQuery<ClinicalAiPattern[]>({
+    queryKey: ["clinical-ai-patterns"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("clinical_ai_patterns")
+        .select("*")
+        .order("times_prescribed", { ascending: false });
+      return (data ?? []) as ClinicalAiPattern[];
+    },
+  });
+
+  const { data: inventoryList = [] } = useQuery({
+    queryKey: ["doctor-room-inventory"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("inventory")
+        .select("id, name, stock, rate, brand, company")
+        .eq("active", true);
+      return data ?? [];
+    },
+  });
 
   const { data: clientReg } = useQuery({
     queryKey: ["client-reg-doctor", selected?.name, selected?.phone],
@@ -139,6 +187,125 @@ export function DoctorTreatmentRecommendation() {
     setCounselorId("");
   };
 
+  // Contraindication & Allergy Analysis
+  const patientAllergies = useMemo(() => {
+    const list: string[] = [];
+    if (clientReg?.has_allergies && clientReg?.allergy_details) {
+      list.push(...clientReg.allergy_details.toLowerCase().split(/[,\s;/]+/).filter(Boolean));
+    }
+    const medCond = (clientReg?.medical_conditions || "").toLowerCase();
+    if (medCond.includes("pregnancy") || medCond.includes("pregnant")) list.push("pregnancy");
+    if (medCond.includes("lactat") || medCond.includes("breastfeeding")) list.push("lactation");
+    if (medCond.includes("keloid")) list.push("keloids");
+    if (medCond.includes("diabet")) list.push("diabetes");
+    if (medCond.includes("hypertens")) list.push("hypertension");
+    return list;
+  }, [clientReg]);
+
+  // Match AI patterns to diagnosis / concerns
+  const suggestedPatterns = useMemo(() => {
+    if (!aiPatterns.length) return [];
+    const query = (diagnosis || clientReg?.skin_problems || clientReg?.hair_problems || "").toLowerCase();
+
+    return aiPatterns
+      .map((pat) => {
+        let contraList: string[] = [];
+        try {
+          contraList =
+            typeof pat.contraindications === "string"
+              ? JSON.parse(pat.contraindications)
+              : pat.contraindications || [];
+        } catch {}
+
+        const contraMatched = contraList.filter((c) =>
+          patientAllergies.some((a) => a.includes(c.toLowerCase()) || c.toLowerCase().includes(a)),
+        );
+        const isContraindicated = contraMatched.length > 0;
+
+        const matchedInv = inventoryList.find(
+          (inv) =>
+            inv.name.toLowerCase().includes(pat.medicine_name.toLowerCase()) ||
+            pat.medicine_name.toLowerCase().includes(inv.name.toLowerCase()),
+        );
+        const stock = matchedInv ? Number(matchedInv.stock) || 0 : 0;
+        const inStock = stock > 0;
+
+        let score = pat.confidence_score || 0.9;
+        if (
+          query &&
+          (pat.concern.toLowerCase().includes(query) ||
+            pat.diagnosis.toLowerCase().includes(query) ||
+            pat.medicine_name.toLowerCase().includes(query))
+        ) {
+          score += 1.0;
+        }
+
+        return {
+          ...pat,
+          contraList,
+          isContraindicated,
+          contraMatched,
+          matchedInv,
+          stock,
+          inStock,
+          score,
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+  }, [aiPatterns, diagnosis, clientReg, patientAllergies, inventoryList]);
+
+  const applySmartPrescription = (pat: (typeof suggestedPatterns)[0]) => {
+    if (pat.isContraindicated) {
+      toast.error(
+        `Contraindicated: ${pat.medicine_name} conflicts with patient profile: ${pat.contraMatched.join(", ")}`,
+      );
+      return;
+    }
+    const invItem = pat.matchedInv;
+    const price = invItem?.rate ? Number(invItem.rate) : 0;
+    setItems((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        type: "product",
+        productId: invItem?.id,
+        name: pat.medicine_name,
+        quantity: 1,
+        doctorSuggestedPrice: price,
+        notes: `${pat.dosage} · ${pat.frequency} × ${pat.duration}`,
+      },
+    ]);
+    toast.success(`Applied ${pat.medicine_name} to prescription table`);
+  };
+
+  const applyAllSafeProtocols = () => {
+    const safeCandidates = suggestedPatterns
+      .filter((p) => !p.isContraindicated && (diagnosis ? p.score > 1.2 : true))
+      .slice(0, 4);
+
+    if (!safeCandidates.length) {
+      return toast.info("No matching safe protocol items for this diagnosis");
+    }
+
+    safeCandidates.forEach((pat) => {
+      const invItem = pat.matchedInv;
+      const price = invItem?.rate ? Number(invItem.rate) : 0;
+      setItems((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          type: "product",
+          productId: invItem?.id,
+          name: pat.medicine_name,
+          quantity: 1,
+          doctorSuggestedPrice: price,
+          notes: `${pat.dosage} · ${pat.frequency} × ${pat.duration}`,
+        },
+      ]);
+    });
+    toast.success(`Applied ${safeCandidates.length} AI-recommended medications!`);
+  };
+
   const sendToCounselor = async () => {
     if (!selected) return toast.error("Select a patient first");
     if (!items.length) return toast.error("Add at least one service or medicine");
@@ -172,6 +339,45 @@ export function DoctorTreatmentRecommendation() {
         .select("id")
         .single();
       if (error) throw error;
+
+      // Self-Learning Knowledge Base: Continuously learn from doctor's prescription
+      for (const it of items) {
+        if (it.type === "product" && it.name.trim()) {
+          try {
+            const existing = aiPatterns.find(
+              (p) => p.medicine_name.toLowerCase() === it.name.trim().toLowerCase(),
+            );
+            if (existing) {
+              await (supabase as any)
+                .from("clinical_ai_patterns")
+                .update({
+                  times_prescribed: (existing.times_prescribed || 1) + 1,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", existing.id);
+            } else {
+              await (supabase as any)
+                .from("clinical_ai_patterns")
+                .insert({
+                  concern: diagnosis || "General Clinical",
+                  diagnosis: diagnosis || "General Dermatology",
+                  medicine_name: it.name.trim(),
+                  dosage: "Prescribed",
+                  frequency: it.notes || "As directed",
+                  duration: "14 days",
+                  category: "oral",
+                  contraindications: JSON.stringify([]),
+                  times_prescribed: 1,
+                  confidence_score: 0.92,
+                });
+            }
+          } catch (learnErr) {
+            console.warn("[DoctorRoom] AI learning pattern update error:", learnErr);
+          }
+        }
+      }
+      refetchPatterns();
+
       toast.success("Recommendation sent to the counselor");
       await refetch();
       window.location.href = `/counselor-room?encounter=${selected.encounterId}&recommendation=${data.id}`;
@@ -276,6 +482,127 @@ export function DoctorTreatmentRecommendation() {
               placeholder="Condition, treatment plan, special instructions..."
             />
           </div>
+
+          {/* Smart In-House Doctor Prescription Recommendation Engine */}
+          <Card className="mb-6 border-indigo-200 bg-gradient-to-br from-indigo-50/60 via-purple-50/30 to-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-indigo-950 flex items-center gap-1.5">
+                    Self-Learning Clinical Prescription AI
+                    <Badge variant="outline" className="border-indigo-300 bg-indigo-100/50 text-[10px] text-indigo-800">
+                      In-House Engine
+                    </Badge>
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    Matches diagnosis &amp; concerns · alerts contraindications · checks live inventory stocks
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={applyAllSafeProtocols}
+                className="border-indigo-300 bg-white text-indigo-700 hover:bg-indigo-50 font-medium text-xs gap-1 shadow-sm"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                1-Click Apply Safe Protocol
+              </Button>
+            </div>
+
+            {/* Quick Diagnosis / Concern Chips */}
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-muted-foreground font-medium">Quick Protocols:</span>
+              {[
+                { label: "Acne Vulgaris", val: "Acne" },
+                { label: "Melasma & PIH", val: "Melasma" },
+                { label: "Hair Loss / PRP", val: "Hair Loss" },
+                { label: "Anti-Aging & Retinol", val: "Anti-Aging" },
+                { label: "Acne Scars", val: "Scars" },
+              ].map((chip) => (
+                <button
+                  key={chip.val}
+                  type="button"
+                  onClick={() => setDiagnosis(chip.label)}
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium border transition ${
+                    diagnosis.includes(chip.val)
+                      ? "bg-indigo-600 text-white border-indigo-600"
+                      : "bg-white text-indigo-900 border-indigo-200 hover:bg-indigo-100/50"
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Live Recommendation Chips */}
+            <div className="mt-3.5 space-y-2">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Live Drug &amp; Regimen Recommendations ({suggestedPatterns.slice(0, 6).length})
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {suggestedPatterns.slice(0, 6).map((pat) => (
+                  <div
+                    key={pat.id}
+                    className={`flex flex-col justify-between rounded-lg border p-2.5 text-xs transition ${
+                      pat.isContraindicated
+                        ? "border-rose-300 bg-rose-50/70"
+                        : "border-slate-200 bg-white hover:border-indigo-300"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-1.5">
+                        <span className="font-semibold text-foreground flex items-center gap-1">
+                          <Pill className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                          {pat.medicine_name}
+                        </span>
+                        {pat.isContraindicated ? (
+                          <Badge variant="destructive" className="text-[10px] shrink-0 font-bold">
+                            🚨 CONTRAINDICATED
+                          </Badge>
+                        ) : pat.inStock ? (
+                          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] shrink-0 hover:bg-emerald-100">
+                            ✅ In Stock ({pat.stock})
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800 text-[10px] shrink-0">
+                            ⚠️ Out of Stock
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {pat.dosage} · {pat.frequency} · {pat.duration}
+                      </p>
+                      {pat.isContraindicated && (
+                        <p className="mt-1 font-semibold text-rose-700 text-[11px]">
+                          ⚠️ Unsafe: Conflicts with patient profile ({pat.contraMatched.join(", ")})
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2">
+                      <span className="text-[10px] text-muted-foreground">
+                        Prescribed {pat.times_prescribed}× · {(pat.confidence_score * 100).toFixed(0)}% match
+                      </span>
+                      <Button
+                        size="sm"
+                        variant={pat.isContraindicated ? "destructive" : "secondary"}
+                        disabled={pat.isContraindicated}
+                        onClick={() => applySmartPrescription(pat)}
+                        className="h-6 text-[11px] px-2"
+                      >
+                        {pat.isContraindicated ? "Blocked" : "+ Apply Rx"}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
 
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold">Treatment recommendation</h3>
