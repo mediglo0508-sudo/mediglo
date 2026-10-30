@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.guard_profile_pending_dues() FROM PUBLIC, anon, authenticated;

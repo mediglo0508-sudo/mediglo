@@ -1,0 +1,21 @@
+[
+ {
+  "key": "duplicate_guard",
+  "value": {
+   "note": "Hard block paused until the duplicate warning UI ships - no override path exists in the currently published build",
+   "enabled": false,
+   "block_high_for_staff": true
+  },
+  "updated_at": "2026-08-24T09:17:35.511369+00:00",
+  "updated_by": null
+ },
+ {
+  "key": "maintenance_mode",
+  "value": {
+   "enabled": false,
+   "message": "MediGlo Vision is currently being updated and improved. The software is currently in the development/update phase, so some time may be required before it is ready. Billing is temporarily unavailable. We apologize for the inconvenience."
+  },
+  "updated_at": "2026-09-09T12:09:18.256+00:00",
+  "updated_by": "9195821e-f274-4640-b75e-d66d5773e49d"
+ }
+]

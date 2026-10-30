@@ -20,6 +20,8 @@ import { loadCompositePrescription } from "@/lib/prescription-history";
 import { Plus, LogIn, Loader2, Receipt, Bell, Pencil, Trash2, FileText, Printer, Search, PackageCheck, Wallet } from "lucide-react";
 import { useAllPendingWallets } from "@/lib/wallet-alerts";
 import { ClientTimelineDialog, type ClientTimelineTarget } from "@/components/ClientTimelineDialog";
+import { DigitalRegistrationDialog } from "@/components/DigitalRegistrationDialog";
+import { UserPlus } from "lucide-react";
 
 
 
@@ -53,6 +55,7 @@ function ReceptionPage() {
   const [phone, setPhone] = useState("");
   const [area, setArea] = useState<string>(AREAS_OF_INTEREST[0]);
   const [saving, setSaving] = useState(false);
+  const [regOpen, setRegOpen] = useState(false);
   const [lookup, setLookup] = useState("");
   const [lookupResult, setLookupResult] = useState<{ name: string; phone: string | null; outstanding: number } | null>(null);
   const [searching, setSearching] = useState(false);
@@ -136,7 +139,7 @@ function ReceptionPage() {
 
   return (
     <div>
-      <PageHeader title="Reception Desk — Walk-In / Appointments" subtitle="Stage 2 · check-in patients · live status board" />
+      <PageHeader action={<Button onClick={() => setRegOpen(true)} className="flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold"><UserPlus className="h-4 w-4" /> Digital Patient Registration</Button>} title="Reception Desk — Walk-In / Appointments" subtitle="Stage 2 · check-in patients · live status board" />
       <div className="mb-4"><PrescriptionQuickAction /></div>
       <PendingWalletsBanner />
       <PendingFulfillmentQueue visits={visits ?? []} onGo={(id) => navigate({ to: "/pos", search: { visit: id } as never })} />
@@ -236,6 +239,7 @@ function ReceptionPage() {
           </Card>
         </div>
       </div>
+      <DigitalRegistrationDialog open={regOpen} onOpenChange={setRegOpen} defaultCheckIn={true} />
     </div>
   );
 }
@@ -395,7 +399,7 @@ function PendingWalletsBanner() {
               <Badge variant="secondary" className="ml-2 shrink-0">{w.remaining} left</Badge>
             </button>
           ))}
-        </div>
+          `r`n    </div>
         {wallets.length > shown.length && (
           <p className="mt-2 text-xs text-muted-foreground">+ {wallets.length - shown.length} more clients with pending sessions.</p>
         )}

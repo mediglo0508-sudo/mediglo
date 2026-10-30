@@ -1,0 +1,34 @@
+[
+ {
+  "id": "bdfda321-93a6-4ad7-bd00-9ec406011e5e",
+  "name": "Room 1",
+  "status": "free",
+  "current_visit_id": null,
+  "current_patient": null,
+  "updated_at": "2026-06-16T12:12:06.381883+00:00"
+ },
+ {
+  "id": "e3412c85-bbe4-4d7e-8cb4-361564ebc1e1",
+  "name": "Room 2",
+  "status": "free",
+  "current_visit_id": null,
+  "current_patient": null,
+  "updated_at": "2026-06-16T12:12:06.381883+00:00"
+ },
+ {
+  "id": "3073f3ae-ee9c-4f3b-8c65-8aee0abe2590",
+  "name": "Room 3",
+  "status": "free",
+  "current_visit_id": null,
+  "current_patient": null,
+  "updated_at": "2026-06-16T12:12:06.381883+00:00"
+ },
+ {
+  "id": "ee74602a-b9c2-4b0f-aca1-e6ffef4b0326",
+  "name": "Laser Bay",
+  "status": "free",
+  "current_visit_id": null,
+  "current_patient": null,
+  "updated_at": "2026-06-16T12:12:06.381883+00:00"
+ }
+]

@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { Plus, Trash2, Printer, Pencil, Wallet, FileText } from "lucide-react";
 import { WorkflowTracker, deriveWorkflowStage } from "@/components/WorkflowTracker";
 import { WalletRedeemDialog } from "@/components/WalletRedeemDialog";
+import { DigitalRegistrationDialog } from "@/components/DigitalRegistrationDialog";
+import { UserPlus } from "lucide-react";
 
 
 export const Route = createFileRoute("/_authenticated/customers")({
@@ -45,6 +47,7 @@ function CustomersPage() {
   const [active, setActive] = useState<Customer | null>(null);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [regOpen, setRegOpen] = useState(false);
 
   const { data: customers } = useQuery({
     queryKey: ["customers"],
@@ -78,7 +81,7 @@ function CustomersPage() {
       <PageHeader
         title="Customers — CRM"
         subtitle="B2C profiles. Double-click or press Enter on a row to open the client drawer."
-        action={canBilling && <Button onClick={addCustomer}><Plus className="mr-1 h-4 w-4" /> Add Customer</Button>}
+        action={canBilling && (<div className="flex items-center gap-2"><Button onClick={() => setRegOpen(true)} className="flex items-center gap-1.5 bg-primary text-primary-foreground font-semibold"><UserPlus className="h-4 w-4" /> Digital Registration</Button><Button variant="outline" onClick={addCustomer}><Plus className="mr-1 h-4 w-4" /> Quick Blank</Button></div>)}
       />
       <Card className="p-0">
         <div className="flex items-center gap-2 border-b p-3">

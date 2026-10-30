@@ -1,0 +1,93 @@
+[
+ {
+  "id": "1c0665d9-bf61-41cd-9548-95ea9cc820dc",
+  "name": "MOISTURIZER",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "a5d4fcfb-56e8-43a3-9578-033f8c2a4f69",
+  "name": "SUNSCREEN",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "eef76eec-93bc-4c1b-b6dc-39f0a3c0579d",
+  "name": "FACE SERUM",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "6ac9d25a-065f-4b39-bc6d-e1db4444d4da",
+  "name": "RETINOL & ANTI AGEING",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "b3670a76-41eb-4253-9571-b54709b90491",
+  "name": "EYE CREAM",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "7afa753f-b6ec-42a1-af90-f8952f06d977",
+  "name": "CLEANSER & FACE WASH",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "c0d96bca-cc2b-446f-ab20-1921602fedfd",
+  "name": "PIGMENTATION & VITAMIN C",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "9ff2eeba-1e07-47f8-bb78-0e685652b173",
+  "name": "ACNE CARE",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "603f1098-9ccd-4c7c-88db-9c1016493bf7",
+  "name": "HAIR CARE",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "52d1572b-4f3c-4315-89a3-b140623a5fbb",
+  "name": "TABLETS",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "19c7be86-831b-430a-9d99-b9b435b27851",
+  "name": "OINTMENTS",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "27ef26cb-1de6-4f0e-a2b0-4f117129ece9",
+  "name": "BODY WASH & LOTIONS",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ },
+ {
+  "id": "d65ca372-7a9e-4401-be17-e372f076f550",
+  "name": "CREAMS",
+  "parent_category": "Retail",
+  "created_at": "2026-07-28T12:58:43.700417+00:00",
+  "updated_at": "2026-07-28T12:58:43.700417+00:00"
+ }
+]

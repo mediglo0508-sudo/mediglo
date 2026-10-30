@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION app_private.deduct_inventory_stock(jsonb, text, text, text) TO authenticated;

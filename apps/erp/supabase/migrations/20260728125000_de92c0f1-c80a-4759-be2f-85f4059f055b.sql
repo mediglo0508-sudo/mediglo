@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.sync_inventory_stock_from_batches() FROM PUBLIC, anon, authenticated;

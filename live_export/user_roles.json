@@ -1,0 +1,128 @@
+[
+ {
+  "id": "8a483781-528c-4333-8c33-a1e73527eb06",
+  "user_id": "a7e8145b-3638-427b-bcb1-b840c06e153d",
+  "role": "therapist",
+  "created_at": "2026-08-10T07:51:07.044568+00:00"
+ },
+ {
+  "id": "e69e3dc9-0218-4e54-9b08-cece8fc510a1",
+  "user_id": "67391485-d112-47ef-876b-2efe04e9441f",
+  "role": "therapist",
+  "created_at": "2026-08-10T08:12:58.504967+00:00"
+ },
+ {
+  "id": "0be29ac2-0a35-4e8d-96cb-d7af3cfc4a37",
+  "user_id": "b3a26294-fa91-4788-ab50-f43c0c01d315",
+  "role": "marketing",
+  "created_at": "2026-08-13T13:36:12.315083+00:00"
+ },
+ {
+  "id": "603e6291-5921-4143-88f4-07a529070831",
+  "user_id": "0283345d-f2d8-45a5-993b-ab92c60c8df7",
+  "role": "therapist",
+  "created_at": "2026-08-14T12:27:07.540253+00:00"
+ },
+ {
+  "id": "55e2bc0c-2323-41b6-ad65-7507a817cc1e",
+  "user_id": "798d3ffd-b601-4554-8b99-61198da5a478",
+  "role": "marketing_head",
+  "created_at": "2026-08-29T11:05:51.548888+00:00"
+ },
+ {
+  "id": "921e8e89-cd1c-4a7c-a0f6-16b1359c2762",
+  "user_id": "59e82299-1c76-4efd-83af-0d58c05f6044",
+  "role": "therapist",
+  "created_at": "2026-09-06T12:24:30.457216+00:00"
+ },
+ {
+  "id": "53b91a22-7563-47f8-985f-5fdca295d063",
+  "user_id": "61531988-1e26-4b8d-a403-ed47133a596d",
+  "role": "admin",
+  "created_at": "2026-06-17T07:21:13.794445+00:00"
+ },
+ {
+  "id": "fa0dfbba-a326-4689-9af1-586f5db3ca92",
+  "user_id": "9195821e-f274-4640-b75e-d66d5773e49d",
+  "role": "admin",
+  "created_at": "2026-07-01T03:18:54.272937+00:00"
+ },
+ {
+  "id": "257d2d2e-6551-4369-bbeb-2f0d82124e68",
+  "user_id": "d65278c2-bda0-43fb-bd87-7f387866c497",
+  "role": "accountant",
+  "created_at": "2026-09-08T06:15:05.52365+00:00"
+ },
+ {
+  "id": "675d270d-cf04-4981-9763-c0e3bc55c3de",
+  "user_id": "a2690785-b8fe-4e3e-bd48-94c1d19649fe",
+  "role": "marketing",
+  "created_at": "2026-09-08T10:35:07.006612+00:00"
+ },
+ {
+  "id": "a20f7668-8070-4878-8010-1f29b0a70531",
+  "user_id": "6187c484-1d84-4ae8-8dd7-baae83c970c0",
+  "role": "admin",
+  "created_at": "2026-09-08T14:52:27.595383+00:00"
+ },
+ {
+  "id": "397ab788-d525-47b8-93c2-2d4a21bc3db0",
+  "user_id": "661724d4-acb8-41a3-a9b8-f01c369f79ad",
+  "role": "reception",
+  "created_at": "2026-09-09T10:18:40.2075+00:00"
+ },
+ {
+  "id": "ca065cde-1514-4007-817c-e077bacd34cd",
+  "user_id": "7121b633-836a-4c3d-9461-beb6e19390f9",
+  "role": "admin",
+  "created_at": "2026-10-26T11:53:58.31116+00:00"
+ },
+ {
+  "id": "ad4d44b9-fe5b-4d6b-b6c1-97b08cdf665a",
+  "user_id": "6029e8e4-b952-4699-b433-b5285ce4b9a9",
+  "role": "doctor",
+  "created_at": "2026-10-29T07:55:08.190876+00:00"
+ },
+ {
+  "id": "26c57ee8-5d94-481b-b997-8155370f34f7",
+  "user_id": "01afdfae-017e-4f7b-a046-c6426a1998b6",
+  "role": "counselor",
+  "created_at": "2026-10-29T07:55:16.435194+00:00"
+ },
+ {
+  "id": "c33ea990-cca7-4f2f-9b91-ce68b60bac3f",
+  "user_id": "d5d14cab-9aaa-4951-ba30-6e6b00f7db84",
+  "role": "therapist",
+  "created_at": "2026-07-14T12:14:32.081724+00:00"
+ },
+ {
+  "id": "97061383-594e-477d-82f1-433d6bc6c196",
+  "user_id": "0c62e007-2e5f-4586-8516-a8b98e06a6b9",
+  "role": "therapist",
+  "created_at": "2026-07-14T12:14:34.840707+00:00"
+ },
+ {
+  "id": "827f94cb-49a3-40b0-9dff-f74ad891ade4",
+  "user_id": "668db3dc-96f5-48c6-9ece-8405a2e030e6",
+  "role": "admin",
+  "created_at": "2026-10-29T08:01:04.439649+00:00"
+ },
+ {
+  "id": "2efeb71d-a0b6-4ecc-82a7-c71f8a626512",
+  "user_id": "8b0d921c-4b8f-40ed-ac2e-49c7073e3705",
+  "role": "marketing",
+  "created_at": "2026-07-15T08:38:36.286156+00:00"
+ },
+ {
+  "id": "6af197ed-6aa4-4821-be49-34611c391fe9",
+  "user_id": "de2f1f18-266b-4007-9d9e-31bcb9d97229",
+  "role": "doctor",
+  "created_at": "2026-07-15T08:38:50.796088+00:00"
+ },
+ {
+  "id": "dac3f3a3-6c43-415d-b11e-bded3753238d",
+  "user_id": "abebd3cf-9253-4449-a3be-bee51fc2ca43",
+  "role": "marketing",
+  "created_at": "2026-07-18T07:30:56.691481+00:00"
+ }
+]

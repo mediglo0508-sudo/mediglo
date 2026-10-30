@@ -1,0 +1,62 @@
+[
+ {
+  "id": "78728efc-b9c9-49c1-bb29-1df27f0dc8cd",
+  "invoice_id": null,
+  "patient_id": "28287217-28df-4282-befd-8c4acdb03b2a",
+  "package_name": "Hyperbaric Oxygen Therapy (HBOT)",
+  "total_sessions": 4,
+  "sessions_completed": 0,
+  "outstanding_balance": 0,
+  "created_at": "2026-07-17T17:09:08.889839+00:00"
+ },
+ {
+  "id": "081035fc-5fad-465a-87d7-9baf09b0783d",
+  "invoice_id": null,
+  "patient_id": "fd857fff-571e-4edf-ae01-ea534c8ec86d",
+  "package_name": "LHR Full Body Female",
+  "total_sessions": 6,
+  "sessions_completed": 0,
+  "outstanding_balance": 0,
+  "created_at": "2026-08-01T10:34:05.797395+00:00"
+ },
+ {
+  "id": "aa6063bf-6aac-4f27-b4f6-4b1720a23f29",
+  "invoice_id": null,
+  "patient_id": "17a88909-6957-4478-84ea-54a8a11f3406",
+  "package_name": "LHR Eyebrow Shaping (Numitec Device)",
+  "total_sessions": 5,
+  "sessions_completed": 0,
+  "outstanding_balance": 0,
+  "created_at": "2026-08-02T12:28:46.501634+00:00"
+ },
+ {
+  "id": "a095561a-85f5-4f87-8764-44a2fde0087a",
+  "invoice_id": null,
+  "patient_id": "e3670958-b075-4e4c-8d6d-b58c3a8d60f4",
+  "package_name": "Laser Toning (Q-Switch Laser)",
+  "total_sessions": 6,
+  "sessions_completed": 0,
+  "outstanding_balance": 0,
+  "created_at": "2026-08-20T11:45:29.456314+00:00"
+ },
+ {
+  "id": "bfa60a1c-45ab-4a53-81f3-70cd9abe35aa",
+  "invoice_id": null,
+  "patient_id": "e9139f77-4c4d-4a23-9ca7-2e6caaff67c7",
+  "package_name": "Face Lhr",
+  "total_sessions": 6,
+  "sessions_completed": 0,
+  "outstanding_balance": 0,
+  "created_at": "2026-08-20T11:51:12.799579+00:00"
+ },
+ {
+  "id": "0571f0cd-2cfd-43b3-af0d-5d0a91f14397",
+  "invoice_id": null,
+  "patient_id": "d24537b2-adee-42d8-8042-a87832c6b637",
+  "package_name": "LHR Full Body Female",
+  "total_sessions": 6,
+  "sessions_completed": 0,
+  "outstanding_balance": 0,
+  "created_at": "2026-08-21T10:13:34.770377+00:00"
+ }
+]

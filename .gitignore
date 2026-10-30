@@ -10,3 +10,8 @@ npm-debug.log*
 .vscode/
 .idea/
 Minou_Nails_Billing_Software/
+
+*.db
+*.db-shm
+*.db-wal
+apps/erp/node_modules

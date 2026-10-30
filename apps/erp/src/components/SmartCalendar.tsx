@@ -22,8 +22,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { AppointmentDetailsModal } from "@/components/Appointments/AppointmentDetailsModal";
-import { AppointmentEditModal } from "@/components/Appointments/AppointmentEditModal";
+import { AppointmentDetailsModal } from "@/components/appointments/AppointmentDetailsModal";
+import { AppointmentEditModal } from "@/components/appointments/AppointmentEditModal";
 import {
   ChevronLeft, ChevronRight, Loader2, AlertCircle, Check, ChevronsUpDown, UserPlus,
   LogIn, XCircle, Info, Pencil, CalendarClock, Trash2,

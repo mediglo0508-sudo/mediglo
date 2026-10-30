@@ -1,0 +1,90 @@
+[
+ {
+  "id": 6,
+  "room_name": "Dr. Room",
+  "status": "FREE",
+  "current_patient_id": null,
+  "current_treatment": null,
+  "assigned_staff_id": null,
+  "last_updated": "2026-06-22T11:49:10.903145+00:00",
+  "current_patient_name": null,
+  "busy_till": null
+ },
+ {
+  "id": 7,
+  "room_name": "Counseling Room 1",
+  "status": "FREE",
+  "current_patient_id": null,
+  "current_treatment": null,
+  "assigned_staff_id": null,
+  "last_updated": "2026-07-02T17:35:33.476728+00:00",
+  "current_patient_name": null,
+  "busy_till": null
+ },
+ {
+  "id": 8,
+  "room_name": "Counseling Room 2",
+  "status": "FREE",
+  "current_patient_id": null,
+  "current_treatment": null,
+  "assigned_staff_id": null,
+  "last_updated": "2026-07-02T17:35:33.476728+00:00",
+  "current_patient_name": null,
+  "busy_till": null
+ },
+ {
+  "id": 4,
+  "room_name": "Soprano Room (Room 4)",
+  "status": "FREE",
+  "current_patient_id": null,
+  "current_treatment": null,
+  "assigned_staff_id": null,
+  "last_updated": "2026-07-15T08:28:14.158+00:00",
+  "current_patient_name": null,
+  "busy_till": null
+ },
+ {
+  "id": 1,
+  "room_name": "Derma Room (Room 1)",
+  "status": "FREE",
+  "current_patient_id": null,
+  "current_treatment": null,
+  "assigned_staff_id": null,
+  "last_updated": "2026-07-17T13:56:29.708+00:00",
+  "current_patient_name": null,
+  "busy_till": null
+ },
+ {
+  "id": 3,
+  "room_name": "Clarity Room (Room 3)",
+  "status": "FREE",
+  "current_patient_id": null,
+  "current_treatment": null,
+  "assigned_staff_id": null,
+  "last_updated": "2026-09-07T07:12:23.808+00:00",
+  "current_patient_name": null,
+  "busy_till": null
+ },
+ {
+  "id": 2,
+  "room_name": "Radicine Room (Room 2)",
+  "status": "FREE",
+  "current_patient_id": null,
+  "current_treatment": null,
+  "assigned_staff_id": null,
+  "last_updated": "2026-09-07T08:58:38.601+00:00",
+  "current_patient_name": null,
+  "busy_till": null
+ },
+ {
+  "id": 5,
+  "room_name": "Triton Technology Room (Room 5)",
+  "status": "FREE",
+  "current_patient_id": null,
+  "current_treatment": null,
+  "assigned_staff_id": null,
+  "last_updated": "2026-09-08T11:27:08.395+00:00",
+  "current_patient_name": null,
+  "busy_till": null
+ }
+]
