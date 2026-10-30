@@ -153,6 +153,19 @@ const DutyCard = memo(function DutyCard({ visit, rooms, inventory, me, roles, on
   const [now, setNow] = useState(Date.now());
   const qc = useQueryClient();
 
+  const { data: regAlert } = useQuery({
+    queryKey: ["therapist-reg-alert", visit.customer_name],
+    queryFn: async () => {
+      const firstName = visit.customer_name.split(" ")[0];
+      const { data } = await (supabase as any)
+        .from("client_registrations")
+        .select("has_allergies, allergy_details, medical_conditions")
+        .ilike("first_name", firstName)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   const startedAt = visit.treatment_started_at ? new Date(visit.treatment_started_at).getTime() : null;
   const running = !!startedAt && !visit.treatment_ended_at;
 
@@ -294,7 +307,26 @@ const DutyCard = memo(function DutyCard({ visit, rooms, inventory, me, roles, on
             <p className="text-lg font-bold">{visit.customer_name}</p>
             <Badge variant="outline" className="text-[11px]">Phone: {maskedPhone}</Badge>
           </div>
-          <p className="text-sm font-medium text-primary">{visit.area_of_interest || "Clinical Procedure"}</p>
+                    <p className="text-sm font-medium text-primary">{visit.area_of_interest || "Clinical Procedure"}</p>
+          {regAlert && (
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {regAlert.has_allergies === 1 && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 border border-rose-300 text-rose-800">
+                  🚨 ALLERGY: {regAlert.allergy_details || "Reported"}
+                </span>
+              )}
+              {String(regAlert.medical_conditions || "").includes("Keloids") && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 border border-amber-300 text-amber-900">
+                  ⚠️ KELOID RISK
+                </span>
+              )}
+              {String(regAlert.medical_conditions || "").includes("Diabetes") && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 border border-amber-200 text-amber-800">
+                  Diabetes
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <Badge variant={running ? "default" : "secondary"}>{badge}</Badge>
       </div>

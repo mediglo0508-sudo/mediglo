@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "dev": "cd apps/mghyn && npm run dev -- --port 3000 --host 0.0.0.0",
+    "camp": "cd apps/mghyn && node ./node_modules/vite/bin/vite.js dev --port 3000 --host 0.0.0.0",
+    "vip-camp": "cd apps/mghyn && node ./node_modules/vite/bin/vite.js dev --port 3000 --host 0.0.0.0",
     "dev:mghyn": "cd apps/mghyn && npm run dev -- --port 3000 --host 0.0.0.0",
     "build:mghyn": "cd apps/mghyn && npm run build",
     "dev:erp": "npm run dev --workspace=@mediglo/erp",

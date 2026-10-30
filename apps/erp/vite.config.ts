@@ -4,6 +4,12 @@ export default defineConfig({
   plugins: [],
   nitro: {
     preset: "node-server",
+    externals: {
+      external: ["cloudflare:workers"],
+    },
+    rollupConfig: {
+      external: ["cloudflare:workers"],
+    },
   },
   vite: {
     server: {
@@ -13,6 +19,11 @@ export default defineConfig({
     resolve: {
       // Keep Start and application imports on one router context during HMR.
       dedupe: ["@tanstack/react-router", "@tanstack/router-core"],
+    },
+    build: {
+      rollupOptions: {
+        external: ["cloudflare:workers"],
+      },
     },
   },
   tanstackStart: {

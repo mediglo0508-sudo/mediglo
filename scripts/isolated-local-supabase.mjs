@@ -339,6 +339,48 @@ db.exec(`
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS client_registrations (
+    id TEXT PRIMARY KEY,
+    customer_id TEXT,
+    registration_date TEXT,
+    first_name TEXT,
+    last_name TEXT,
+    gender TEXT,
+    gender_other TEXT,
+    dob TEXT,
+    age INTEGER,
+    address TEXT,
+    city TEXT,
+    mobile_no TEXT,
+    email TEXT,
+    profession TEXT,
+    profession_other TEXT,
+    skin_problems TEXT,
+    skin_problems_other TEXT,
+    hair_problems TEXT,
+    hair_problems_other TEXT,
+    body_concerns TEXT,
+    body_concerns_other TEXT,
+    wellbeing_concerns TEXT,
+    wellbeing_concerns_other TEXT,
+    longevity_concerns TEXT,
+    clinics_visited_earlier_1 TEXT,
+    clinics_visited_earlier_2 TEXT,
+    medical_conditions TEXT,
+    medical_conditions_other TEXT,
+    prescription_medicines TEXT,
+    has_allergies INTEGER DEFAULT 0,
+    allergy_details TEXT,
+    referral_source TEXT,
+    referral_source_other TEXT,
+    receive_updates INTEGER DEFAULT 1,
+    signature_data TEXT,
+    signature_timestamp TEXT,
+    consent_agreed INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS vendors (
     id TEXT PRIMARY KEY,
     name TEXT,
@@ -366,6 +408,30 @@ function seedMasterData() {
       INSERT OR REPLACE INTO services_master (id, category, name, sac_code, gst_rate, default_price, cost_estimate, active, gap_days, duration_minutes, auto_followup, auto_appointment, consumables, sessions, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
+    if (table === "client_registrations") {
+      for (const item of items) {
+        const cleanPhone = (item.mobile_no || "").trim();
+        const fullName = `${(item.first_name || "").toUpperCase()} ${item.last_name || ""}`.trim();
+        let cust = null;
+        if (cleanPhone) {
+          cust = db.prepare("SELECT * FROM customers WHERE phone = ?").get(cleanPhone);
+        }
+        if (!cust && fullName) {
+          cust = db.prepare("SELECT * FROM customers WHERE lower(name) = lower(?)").get(fullName);
+        }
+        if (cust) {
+          item.customer_id = cust.id;
+          db.prepare("UPDATE customers SET age = COALESCE(?, age), gender = COALESCE(?, gender), city = COALESCE(?, city), email = COALESCE(?, email), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(item.age, item.gender, item.city, item.email, cust.id);
+        } else {
+          const custId = "c-" + Math.random().toString(36).slice(2, 10);
+          item.customer_id = custId;
+          db.prepare("INSERT INTO customers (id, name, phone, age, gender, city, email, state_code, client_type, outstanding_balance) VALUES (?, ?, ?, ?, ?, ?, ?, '06', 'New', 0)")
+            .run(custId, fullName || "Walk-in Client", cleanPhone || null, item.age || null, item.gender || null, item.city || "Gurugram", item.email || null);
+        }
+      }
+    }
+
     db.exec("BEGIN TRANSACTION;");
     for (const s of services) {
       insertService.run(
@@ -398,6 +464,30 @@ function seedMasterData() {
       INSERT OR REPLACE INTO inventory (id, name, category, stock, rate, expiry_date, batch_no, active, sku, barcode, brand, company, sub_category, default_supplier_id, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
+    if (table === "client_registrations") {
+      for (const item of items) {
+        const cleanPhone = (item.mobile_no || "").trim();
+        const fullName = `${(item.first_name || "").toUpperCase()} ${item.last_name || ""}`.trim();
+        let cust = null;
+        if (cleanPhone) {
+          cust = db.prepare("SELECT * FROM customers WHERE phone = ?").get(cleanPhone);
+        }
+        if (!cust && fullName) {
+          cust = db.prepare("SELECT * FROM customers WHERE lower(name) = lower(?)").get(fullName);
+        }
+        if (cust) {
+          item.customer_id = cust.id;
+          db.prepare("UPDATE customers SET age = COALESCE(?, age), gender = COALESCE(?, gender), city = COALESCE(?, city), email = COALESCE(?, email), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(item.age, item.gender, item.city, item.email, cust.id);
+        } else {
+          const custId = "c-" + Math.random().toString(36).slice(2, 10);
+          item.customer_id = custId;
+          db.prepare("INSERT INTO customers (id, name, phone, age, gender, city, email, state_code, client_type, outstanding_balance) VALUES (?, ?, ?, ?, ?, ?, ?, '06', 'New', 0)")
+            .run(custId, fullName || "Walk-in Client", cleanPhone || null, item.age || null, item.gender || null, item.city || "Gurugram", item.email || null);
+        }
+      }
+    }
+
     db.exec("BEGIN TRANSACTION;");
     for (const item of items) {
       insertItem.run(
@@ -430,6 +520,30 @@ function seedMasterData() {
       INSERT OR REPLACE INTO customers (id, name, phone, state_code, client_type, age, gender, customer_code, outstanding_balance, internal_notes, city, email, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
+    if (table === "client_registrations") {
+      for (const item of items) {
+        const cleanPhone = (item.mobile_no || "").trim();
+        const fullName = `${(item.first_name || "").toUpperCase()} ${item.last_name || ""}`.trim();
+        let cust = null;
+        if (cleanPhone) {
+          cust = db.prepare("SELECT * FROM customers WHERE phone = ?").get(cleanPhone);
+        }
+        if (!cust && fullName) {
+          cust = db.prepare("SELECT * FROM customers WHERE lower(name) = lower(?)").get(fullName);
+        }
+        if (cust) {
+          item.customer_id = cust.id;
+          db.prepare("UPDATE customers SET age = COALESCE(?, age), gender = COALESCE(?, gender), city = COALESCE(?, city), email = COALESCE(?, email), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(item.age, item.gender, item.city, item.email, cust.id);
+        } else {
+          const custId = "c-" + Math.random().toString(36).slice(2, 10);
+          item.customer_id = custId;
+          db.prepare("INSERT INTO customers (id, name, phone, age, gender, city, email, state_code, client_type, outstanding_balance) VALUES (?, ?, ?, ?, ?, ?, ?, '06', 'New', 0)")
+            .run(custId, fullName || "Walk-in Client", cleanPhone || null, item.age || null, item.gender || null, item.city || "Gurugram", item.email || null);
+        }
+      }
+    }
+
     db.exec("BEGIN TRANSACTION;");
     for (const c of customers) {
       insertCustomer.run(
@@ -469,7 +583,31 @@ function seedMasterData() {
       if (Array.isArray(data) && data.length > 0) {
         const placeholders = cols.map(() => "?").join(", ");
         const stmt = db.prepare(`INSERT OR REPLACE INTO ${table} (${cols.join(", ")}) VALUES (${placeholders})`);
-        db.exec("BEGIN TRANSACTION;");
+        if (table === "client_registrations") {
+      for (const item of items) {
+        const cleanPhone = (item.mobile_no || "").trim();
+        const fullName = `${(item.first_name || "").toUpperCase()} ${item.last_name || ""}`.trim();
+        let cust = null;
+        if (cleanPhone) {
+          cust = db.prepare("SELECT * FROM customers WHERE phone = ?").get(cleanPhone);
+        }
+        if (!cust && fullName) {
+          cust = db.prepare("SELECT * FROM customers WHERE lower(name) = lower(?)").get(fullName);
+        }
+        if (cust) {
+          item.customer_id = cust.id;
+          db.prepare("UPDATE customers SET age = COALESCE(?, age), gender = COALESCE(?, gender), city = COALESCE(?, city), email = COALESCE(?, email), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(item.age, item.gender, item.city, item.email, cust.id);
+        } else {
+          const custId = "c-" + Math.random().toString(36).slice(2, 10);
+          item.customer_id = custId;
+          db.prepare("INSERT INTO customers (id, name, phone, age, gender, city, email, state_code, client_type, outstanding_balance) VALUES (?, ?, ?, ?, ?, ?, ?, '06', 'New', 0)")
+            .run(custId, fullName || "Walk-in Client", cleanPhone || null, item.age || null, item.gender || null, item.city || "Gurugram", item.email || null);
+        }
+      }
+    }
+
+    db.exec("BEGIN TRANSACTION;");
         for (const row of data) {
           stmt.run(...cols.map(c => row[c] ?? null));
         }
@@ -853,6 +991,30 @@ function handleRest(req, res, table, url, body) {
     try { payload = JSON.parse(body || "{}"); } catch {}
     const items = Array.isArray(payload) ? payload : [payload];
     const inserted = [];
+
+    if (table === "client_registrations") {
+      for (const item of items) {
+        const cleanPhone = (item.mobile_no || "").trim();
+        const fullName = `${(item.first_name || "").toUpperCase()} ${item.last_name || ""}`.trim();
+        let cust = null;
+        if (cleanPhone) {
+          cust = db.prepare("SELECT * FROM customers WHERE phone = ?").get(cleanPhone);
+        }
+        if (!cust && fullName) {
+          cust = db.prepare("SELECT * FROM customers WHERE lower(name) = lower(?)").get(fullName);
+        }
+        if (cust) {
+          item.customer_id = cust.id;
+          db.prepare("UPDATE customers SET age = COALESCE(?, age), gender = COALESCE(?, gender), city = COALESCE(?, city), email = COALESCE(?, email), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(item.age, item.gender, item.city, item.email, cust.id);
+        } else {
+          const custId = "c-" + Math.random().toString(36).slice(2, 10);
+          item.customer_id = custId;
+          db.prepare("INSERT INTO customers (id, name, phone, age, gender, city, email, state_code, client_type, outstanding_balance) VALUES (?, ?, ?, ?, ?, ?, ?, '06', 'New', 0)")
+            .run(custId, fullName || "Walk-in Client", cleanPhone || null, item.age || null, item.gender || null, item.city || "Gurugram", item.email || null);
+        }
+      }
+    }
 
     db.exec("BEGIN TRANSACTION;");
     for (const item of items) {

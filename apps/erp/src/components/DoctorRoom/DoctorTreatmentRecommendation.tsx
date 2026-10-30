@@ -45,6 +45,32 @@ export function DoctorTreatmentRecommendation() {
   const { data: services = [] } = useServiceCatalog();
   const { data: products = [] } = useProductCatalog();
 
+  const { data: clientReg } = useQuery({
+    queryKey: ["client-reg-doctor", selected?.name, selected?.phone],
+    enabled: !!selected,
+    queryFn: async () => {
+      const cleanPhone = (selected?.phone || "").replace(/\D/g, "");
+      if (cleanPhone) {
+        const { data } = await (supabase as any)
+          .from("client_registrations")
+          .select("*")
+          .eq("mobile_no", cleanPhone)
+          .maybeSingle();
+        if (data) return data;
+      }
+      if (selected?.name) {
+        const firstName = selected.name.split(" ")[0];
+        const { data } = await (supabase as any)
+          .from("client_registrations")
+          .select("*")
+          .ilike("first_name", firstName)
+          .maybeSingle();
+        return data;
+      }
+      return null;
+    },
+  });
+
   const { data: patients = [], refetch } = useQuery({
     queryKey: ["doctor-room-queue"],
     queryFn: async (): Promise<QueuePatient[]> => {
@@ -187,6 +213,35 @@ export function DoctorTreatmentRecommendation() {
         <Card className="p-5 lg:col-span-2">
           <div className="mb-4 border-b pb-3">
             <div className="text-lg font-semibold">{selected.name}</div>
+            {clientReg && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5 mb-2">
+                {clientReg.has_allergies === 1 && (
+                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 border border-rose-300 text-rose-800 flex items-center gap-1">
+                    🚨 ALLERGY: {clientReg.allergy_details || "Reported"}
+                  </span>
+                )}
+                {String(clientReg.medical_conditions || "").includes("Keloids") && (
+                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-100 border border-amber-300 text-amber-900">
+                    ⚠️ KELOID PRONE
+                  </span>
+                )}
+                {String(clientReg.medical_conditions || "").includes("Diabetes") && (
+                  <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-50 border border-amber-200 text-amber-800">
+                    Diabetes
+                  </span>
+                )}
+                {String(clientReg.medical_conditions || "").includes("Hypertension") && (
+                  <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-50 border border-amber-200 text-amber-800">
+                    Hypertension
+                  </span>
+                )}
+                {String(clientReg.medical_conditions || "").includes("Implant") && (
+                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 border border-rose-300 text-rose-800">
+                    ⚠️ BODY IMPLANT / PACEMAKER
+                  </span>
+                )}
+              </div>
+            )}
             <div className="text-xs text-muted-foreground">{selected.phone || "—"}</div>
           </div>
 

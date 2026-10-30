@@ -20,7 +20,7 @@ import { loadCompositePrescription } from "@/lib/prescription-history";
 import { Plus, LogIn, Loader2, Receipt, Bell, Pencil, Trash2, FileText, Printer, Search, PackageCheck, Wallet } from "lucide-react";
 import { useAllPendingWallets } from "@/lib/wallet-alerts";
 import { ClientTimelineDialog, type ClientTimelineTarget } from "@/components/ClientTimelineDialog";
-import { DigitalRegistrationDialog } from "@/components/DigitalRegistrationDialog";
+import { DigitalClientRegistrationForm } from "@/components/DigitalClientRegistrationForm";
 import { UserPlus } from "lucide-react";
 
 
@@ -239,7 +239,7 @@ function ReceptionPage() {
           </Card>
         </div>
       </div>
-      <DigitalRegistrationDialog open={regOpen} onOpenChange={setRegOpen} defaultCheckIn={true} />
+      <Dialog open={regOpen} onOpenChange={setRegOpen}><DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto"><DigitalClientRegistrationForm onSuccess={() => setRegOpen(false)} onCancel={() => setRegOpen(false)} defaultCheckIn={true} /></DialogContent></Dialog>
     </div>
   );
 }
