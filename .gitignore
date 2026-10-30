@@ -15,3 +15,5 @@ Minou_Nails_Billing_Software/
 *.db-shm
 *.db-wal
 apps/erp/node_modules
+.vite/
+.output/

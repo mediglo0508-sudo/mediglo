@@ -6,6 +6,7 @@ export default defineConfig({
     preset: "node-server",
   },
   vite: {
+    cacheDir: "./.vite",
     server: {
       host: "0.0.0.0",
       port: 3000,

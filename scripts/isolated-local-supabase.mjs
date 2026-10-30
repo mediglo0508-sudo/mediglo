@@ -1016,16 +1016,17 @@ function handleRest(req, res, table, url, body) {
       }
     }
 
-    db.exec("BEGIN TRANSACTION;");
-    for (const item of items) {
-      if (!item.id) item.id = "id-" + Math.random().toString(36).slice(2, 10);
-      const cols = Object.keys(item);
-      const placeholders = cols.map(() => "?").join(", ");
-      const insertSql = `INSERT OR REPLACE INTO "${table}" (${cols.map(c => `"${c}"`).join(", ")}) VALUES (${placeholders})`;
-      db.prepare(insertSql).run(...cols.map(c => typeof item[c] === "object" ? JSON.stringify(item[c]) : item[c]));
-      inserted.push(item);
-    }
-    db.exec("COMMIT;");
+    const insertTx = db.transaction((rows) => {
+      for (const item of rows) {
+        if (!item.id) item.id = "id-" + Math.random().toString(36).slice(2, 10);
+        const cols = Object.keys(item);
+        const placeholders = cols.map(() => "?").join(", ");
+        const insertSql = `INSERT OR REPLACE INTO "${table}" (${cols.map(c => `"${c}"`).join(", ")}) VALUES (${placeholders})`;
+        db.prepare(insertSql).run(...cols.map(c => typeof item[c] === "object" ? JSON.stringify(item[c]) : item[c]));
+        inserted.push(item);
+      }
+    });
+    insertTx(items);
 
     res.writeHead(201, { "Content-Type": "application/json" });
     res.end(JSON.stringify(Array.isArray(payload) ? inserted : inserted[0] || {}));
