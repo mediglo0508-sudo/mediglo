@@ -445,9 +445,37 @@ if (!checkAiPatterns || checkAiPatterns.c === 0) {
 }
 
 // Ensure dynamic columns exist in SQLite tables
-const ensureCol = (tbl, col, def) => {
+const tableColumnCache = new Map();
+const ensureCol = (tbl, col, def = "TEXT") => {
   try { db.prepare(`ALTER TABLE "${tbl}" ADD COLUMN "${col}" ${def}`).run(); } catch {}
 };
+
+function ensureTableCol(tbl, col, def = "TEXT") {
+  let cols = tableColumnCache.get(tbl);
+  if (!cols) {
+    try {
+      const info = db.prepare(`PRAGMA table_info("${tbl}")`).all();
+      cols = new Set(info.map(c => c.name));
+      tableColumnCache.set(tbl, cols);
+    } catch {
+      cols = new Set();
+    }
+  }
+  if (!cols.has(col)) {
+    try {
+      db.prepare(`ALTER TABLE "${tbl}" ADD COLUMN "${col}" ${def}`).run();
+      cols.add(col);
+    } catch {}
+  }
+}
+
+function sanitizeSqlParam(v) {
+  if (v === undefined || v === null) return null;
+  if (typeof v === "object") return JSON.stringify(v);
+  if (typeof v === "boolean") return v ? 1 : 0;
+  return v;
+}
+
 ensureCol("appointments", "appointment_date", "TEXT");
 ensureCol("appointments", "appointment_time", "TEXT");
 ensureCol("appointments", "service_inquiry", "TEXT");
@@ -457,6 +485,23 @@ ensureCol("appointments", "gender", "TEXT");
 ensureCol("appointments", "wallet_id", "TEXT");
 ensureCol("appointments", "integration_key", "TEXT");
 ensureCol("appointments", "updated_at", "TEXT");
+
+ensureCol("expenses", "expense_date", "TEXT");
+ensureCol("expenses", "date", "TEXT");
+ensureCol("expenses", "paid_to", "TEXT");
+ensureCol("expenses", "created_by", "TEXT");
+ensureCol("expenses", "payment_mode", "TEXT");
+ensureCol("expenses", "updated_at", "TEXT");
+
+ensureCol("invoices", "invoice_date", "TEXT");
+ensureCol("invoices", "payment_method", "TEXT");
+ensureCol("invoices", "doctor_id", "TEXT");
+ensureCol("invoices", "counselor_id", "TEXT");
+
+ensureCol("customers", "outstanding_balance", "REAL DEFAULT 0");
+ensureCol("customers", "total_spent", "REAL DEFAULT 0");
+ensureCol("customers", "visit_count", "INTEGER DEFAULT 0");
+ensureCol("customers", "last_visit", "TEXT");
 
 // Master Seeding Function
 function seedMasterData() {
@@ -508,29 +553,6 @@ function seedMasterData() {
       INSERT OR REPLACE INTO inventory (id, name, category, stock, rate, expiry_date, batch_no, active, sku, barcode, brand, company, sub_category, default_supplier_id, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    if (table === "client_registrations") {
-      for (const item of items) {
-        const cleanPhone = (item.mobile_no || "").trim();
-        const fullName = `${(item.first_name || "").toUpperCase()} ${item.last_name || ""}`.trim();
-        let cust = null;
-        if (cleanPhone) {
-          cust = db.prepare("SELECT * FROM customers WHERE phone = ?").get(cleanPhone);
-        }
-        if (!cust && fullName) {
-          cust = db.prepare("SELECT * FROM customers WHERE lower(name) = lower(?)").get(fullName);
-        }
-        if (cust) {
-          item.customer_id = cust.id;
-          db.prepare("UPDATE customers SET age = COALESCE(?, age), gender = COALESCE(?, gender), city = COALESCE(?, city), email = COALESCE(?, email), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-            .run(item.age, item.gender, item.city, item.email, cust.id);
-        } else {
-          const custId = "c-" + Math.random().toString(36).slice(2, 10);
-          item.customer_id = custId;
-          db.prepare("INSERT INTO customers (id, name, phone, age, gender, city, email, state_code, client_type, outstanding_balance) VALUES (?, ?, ?, ?, ?, ?, ?, '06', 'New', 0)")
-            .run(custId, fullName || "Walk-in Client", cleanPhone || null, item.age || null, item.gender || null, item.city || "Gurugram", item.email || null);
-        }
-      }
-    }
 
     db.exec("BEGIN TRANSACTION;");
     for (const item of items) {
@@ -1063,17 +1085,27 @@ function handleRest(req, res, table, url, body) {
       }
     }
 
-    const insertTx = db.transaction((rows) => {
-      for (const item of rows) {
+    db.exec("BEGIN TRANSACTION;");
+    try {
+      for (const item of items) {
         if (!item.id) item.id = "id-" + Math.random().toString(36).slice(2, 10);
         const cols = Object.keys(item);
+        for (const c of cols) {
+          ensureTableCol(table, c);
+        }
         const placeholders = cols.map(() => "?").join(", ");
         const insertSql = `INSERT OR REPLACE INTO "${table}" (${cols.map(c => `"${c}"`).join(", ")}) VALUES (${placeholders})`;
-        db.prepare(insertSql).run(...cols.map(c => typeof item[c] === "object" ? JSON.stringify(item[c]) : item[c]));
+        db.prepare(insertSql).run(...cols.map(c => sanitizeSqlParam(item[c])));
         inserted.push(item);
       }
-    });
-    insertTx(items);
+      db.exec("COMMIT;");
+    } catch (err) {
+      try { db.exec("ROLLBACK;"); } catch {}
+      console.error(`[Isolated DB] Error inserting into ${table}:`, err.message);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
+      return;
+    }
 
     res.writeHead(201, { "Content-Type": "application/json" });
     res.end(JSON.stringify(Array.isArray(payload) ? inserted : inserted[0] || {}));
@@ -1094,17 +1126,25 @@ function handleRest(req, res, table, url, body) {
     }
 
     const setCols = Object.keys(payload);
+    for (const c of setCols) {
+      ensureTableCol(table, c);
+    }
     const setSql = setCols.map(c => `"${c}" = ?`).join(", ");
-    const updateParams = setCols.map(c => typeof payload[c] === "object" ? JSON.stringify(payload[c]) : payload[c]);
+    const updateParams = setCols.map(c => sanitizeSqlParam(payload[c]));
 
     let sql = `UPDATE "${table}" SET ${setSql}`;
     if (whereClauses.length > 0) {
       sql += " WHERE " + whereClauses.join(" AND ");
     }
-    db.prepare(sql).run(...updateParams, ...params);
-
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(payload));
+    try {
+      db.prepare(sql).run(...updateParams, ...params);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(payload));
+    } catch (err) {
+      console.error(`[Isolated DB] Error updating ${table}:`, err.message);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err.message }));
+    }
     return;
   }
 
