@@ -4,6 +4,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
+process.on("uncaughtException", (err) => {
+  if (err?.code === "ECONNRESET" || err?.code === "EPIPE" || err?.message?.includes("aborted")) return;
+  console.error("[Isolated DB] Uncaught Exception:", err);
+});
+process.on("unhandledRejection", (err) => {
+  if ((err && typeof err === "object" && "code" in err && err.code === "ECONNRESET") || (err && typeof err === "object" && "message" in err && typeof err.message === "string" && err.message.includes("aborted"))) return;
+  console.error("[Isolated DB] Unhandled Rejection:", err);
+});
+
 const PORT = 54321;
 const HOST = "127.0.0.1";
 const DB_PATH = path.resolve("apps/erp/isolated_mediglo_harmony.db");

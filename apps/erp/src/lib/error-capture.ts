@@ -15,6 +15,25 @@ if (typeof globalThis.addEventListener === "function") {
   );
 }
 
+if (typeof process !== "undefined" && typeof process.on === "function") {
+  process.on("uncaughtException", (error: any) => {
+    const code = error?.code || "";
+    const msg = error?.message || "";
+    if (code === "ECONNRESET" || code === "EPIPE" || code === "ERR_STREAM_PREMATURE_CLOSE" || msg.includes("aborted")) {
+      return;
+    }
+    record(error);
+  });
+  process.on("unhandledRejection", (reason: any) => {
+    const code = (reason as any)?.code || "";
+    const msg = typeof reason === "string" ? reason : (reason as any)?.message || "";
+    if (code === "ECONNRESET" || code === "EPIPE" || code === "ERR_STREAM_PREMATURE_CLOSE" || msg.includes("aborted")) {
+      return;
+    }
+    record(reason);
+  });
+}
+
 export function consumeLastCapturedError(): unknown {
   if (!lastCapturedError) return undefined;
   if (Date.now() - lastCapturedError.at > TTL_MS) {
